@@ -1,12 +1,12 @@
 """
 Pure Python Recommender System Core Algorithms for Anime-DSRS.
-Implements the exact algorithms from course materials:
-- Chapter 3: Popularity-Based Recommender (Wilson score / Bayesian average)
-- Chapter 4: Content-Based Cosine Similarity (29-Genre Vector Space Model)
-- Chapter 5: Latent Factor Matrix Factorization / Truncated SVD
-- Chapter 6: User-Based & Item-Based Collaborative Filtering (k-NN)
-- Chapter 7: Knowledge-Based Constraints & Multi-Attribute Case Similarity
-- Chapter 8: Context-Aware Time Availability & Relevance Multipliers
+Implements the core recommendation paradigms:
+- Popularity-Based Recommender (Wilson score / Bayesian average)
+- Content-Based Cosine Similarity (29-Genre Vector Space Model)
+- Latent Factor Matrix Factorization / Truncated SVD
+- User-Based & Item-Based Collaborative Filtering (k-NN)
+- Knowledge-Based Constraints & Multi-Attribute Case Similarity
+- Context-Aware Time Availability & Relevance Multipliers
 """
 
 import math
@@ -15,7 +15,7 @@ import csv
 from typing import List, Dict, Any, Tuple, Optional
 
 # ============================================================
-# CHAPTER 4: VECTOR MATHEMATICS & COSINE SIMILARITY
+# VECTOR MATHEMATICS & COSINE SIMILARITY
 # ============================================================
 
 def dot_product(v1: List[float], v2: List[float]) -> float:
@@ -28,7 +28,7 @@ def vector_norm(v: List[float]) -> float:
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     """
-    Chapter 4: Cosine Similarity between two numeric vectors.
+    Cosine Similarity between two numeric vectors.
     sim(A, B) = (A . B) / (||A|| * ||B||)
     """
     norm1 = vector_norm(v1)
@@ -38,7 +38,7 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return dot_product(v1, v2) / (norm1 * norm2)
 
 # ============================================================
-# CHAPTER 3: POPULARITY-BASED RECOMMENDATION
+# POPULARITY-BASED RECOMMENDATION
 # ============================================================
 
 def calculate_bayesian_rating(rate: float, votes: int, global_mean: float = 3.65, min_votes: int = 100) -> float:
@@ -57,7 +57,7 @@ def recommend_popular(
     top_n: int = 10
 ) -> List[Dict[str, Any]]:
     """
-    Chapter 3: Popularity-based recommendation filtered by vote count threshold.
+    Popularity-based recommendation filtered by vote count threshold.
     """
     candidates = [item for item in catalog if item["votes"] >= min_vote_threshold]
     if not candidates:
@@ -72,7 +72,7 @@ def recommend_popular(
     return sorted_candidates[:top_n]
 
 # ============================================================
-# CHAPTER 4: CONTENT-BASED SIMILARITY RECOMMENDATION
+# CONTENT-BASED SIMILARITY RECOMMENDATION
 # ============================================================
 
 def recommend_content_similar(
@@ -81,7 +81,7 @@ def recommend_content_similar(
     top_n: int = 10
 ) -> List[Tuple[Dict[str, Any], float]]:
     """
-    Chapter 4: Recommends items most similar to target anime using genre cosine similarity.
+    Recommends items most similar to target anime using genre cosine similarity.
     """
     target_vec = target_anime["genre_vector"]
     scores = []
@@ -152,7 +152,7 @@ def build_user_content_profile(
     return normalized_vector, genre_weights
 
 # ============================================================
-# CHAPTER 7: KNOWLEDGE-BASED RECOMMENDATION & EXPLAINABILITY
+# KNOWLEDGE-BASED RECOMMENDATION & EXPLAINABILITY
 # ============================================================
 
 # Domain Knowledge Rules: Mood -> Preferred Genre Mapping
@@ -310,7 +310,7 @@ def filter_knowledge_constraints(
     return candidates
 
 # ============================================================
-# CHAPTER 6: MEMORY-BASED COLLABORATIVE FILTERING
+# MEMORY-BASED COLLABORATIVE FILTERING
 # ============================================================
 
 def predict_user_cf_rating(
@@ -320,7 +320,7 @@ def predict_user_cf_rating(
     k_neighbors: int = 10
 ) -> Tuple[float, List[Tuple[int, float]]]:
     """
-    Chapter 6: User-based collaborative filtering using Cosine Similarity on common ratings.
+    User-based collaborative filtering using Cosine Similarity on common ratings.
     """
     similarities = []
 
@@ -353,12 +353,12 @@ def predict_user_cf_rating(
     return (round(predicted_rating, 2), [(u, round(s, 3)) for u, s, _ in top_k])
 
 # ============================================================
-# CHAPTER 5: MATRIX FACTORIZATION / TRUNCATED SVD
+# MATRIX FACTORIZATION / TRUNCATED SVD
 # ============================================================
 
 class SVDModel:
     """
-    Chapter 5: Latent Factor Model for anime recommendations.
+    Latent Factor Model for anime recommendations.
     Uses power-iteration / alternating gradient updates to learn latent vectors P and Q.
     """
     def __init__(self, n_factors: int = 20, lr: float = 0.01, reg: float = 0.05, n_epochs: int = 15):
