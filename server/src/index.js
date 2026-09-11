@@ -143,7 +143,7 @@ app.get('/api/anime/:id', (req, res) => {
   res.json(anime);
 });
 
-// 4. Content-Based Item Similarity (Cosine Similarity on 29 Genres, Ch 3/4)
+// 4. Content-Based Item Similarity (Cosine Similarity on 29 Genres)
 app.get('/api/anime/:id/similar', async (req, res) => {
   const id = parseInt(req.params.id);
   const topK = parseInt(req.query.limit) || 6;
