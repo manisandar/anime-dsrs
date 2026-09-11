@@ -1,0 +1,14 @@
+{
+  "name": "anime-dsrs-server",
+  "version": "1.0.0",
+  "description": "Express Backend Gateway for Anime Decision Support and Hybrid Recommendation System",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "morgan": "^1.12.0"
+  }
+}
