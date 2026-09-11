@@ -100,10 +100,10 @@ git push -u origin main
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │         Academic Client Engine (localEngine.js)        │  │
 │  │                                                       │  │
-│  │  1. Popularity: Bayesian Weighted Rating (Ch 3)       │  │
-│  │  2. Content-Based: 29-Genre Cosine Similarity (Ch 4)  │  │
-│  │  3. Knowledge-Based: Constraint & Mood Rules (Ch 7)   │  │
-│  │  4. 1+1 Hybrid: 50% CBF Taste + 50% KBR Fit (Ch 10)   │  │
+│  │  1. Popularity: Bayesian Weighted Rating              │  │
+│  │  2. Content-Based: 29-Genre Cosine Similarity         │  │
+│  │  3. Knowledge-Based: Constraint & Mood Rules          │  │
+│  │  4. 1+1 Hybrid: 50% CBF Taste + 50% KBR Fit           │  │
 │  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```

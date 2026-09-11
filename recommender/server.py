@@ -44,11 +44,11 @@ class RecommenderHandler(BaseHTTPRequestHandler):
                 "status": "healthy",
                 "service": "anivibe-recommender-engine",
                 "paradigms": {
-                    "popularity": "Bayesian consensus ranking (Ch 3)",
-                    "cbf_item": "Item-to-Item Cosine Similarity on 29 Genres (Ch 4)",
-                    "cbf_user": "Personalized Taste Profile from Session Ratings (Ch 4)",
-                    "kbr": "Constraint Satisfaction & Domain Rules Reasoning (Ch 7)",
-                    "hybrid": "1+1 Hybrid: 50% CBF Taste + 50% KBR Requirements (Ch 10)"
+                    "popularity": "Bayesian consensus ranking",
+                    "cbf_item": "Item-to-Item Cosine Similarity on 29 Genres",
+                    "cbf_user": "Personalized Taste Profile from Session Ratings",
+                    "kbr": "Constraint Satisfaction & Domain Rules Reasoning",
+                    "hybrid": "1+1 Hybrid: 50% CBF Taste + 50% KBR Requirements"
                 },
                 "catalog_size": len(pipeline.catalog)
             }

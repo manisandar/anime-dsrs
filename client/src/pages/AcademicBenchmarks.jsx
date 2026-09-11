@@ -4,7 +4,7 @@ import { Award, BookOpen, CheckCircle, GitBranch, Layers, ShieldCheck } from 'lu
 export default function AcademicBenchmarks() {
   const benchmarkData = [
     {
-      model: 'Popularity Baseline [Ch 2]',
+      model: 'Popularity Baseline',
       precision: '0.1020',
       recall: '0.1132',
       diversity: '0.9628',
@@ -12,7 +12,7 @@ export default function AcademicBenchmarks() {
       note: 'High consensus hits, but zero personalization and poor catalog coverage (recommends same blockbusters).'
     },
     {
-      model: 'Content-Based Alone [Ch 3/4]',
+      model: 'Content-Based Alone',
       precision: '0.0120',
       recall: '0.0120',
       diversity: '0.2638',
@@ -20,7 +20,7 @@ export default function AcademicBenchmarks() {
       note: 'High genre fidelity, but suffers from overspecialization (low diversity, 0.2638).'
     },
     {
-      model: 'Knowledge-Based Alone [Ch 7]',
+      model: 'Knowledge-Based Alone',
       precision: '0.0000',
       recall: '0.0000',
       diversity: '0.9081',
@@ -28,7 +28,7 @@ export default function AcademicBenchmarks() {
       note: 'Pure constraint filtering does not use past rating history, serving as a zero-shot decision query filter.'
     },
     {
-      model: '1+1 Hybrid Recommender [Ch 10]',
+      model: '1+1 Hybrid Recommender',
       precision: '0.0140',
       recall: '0.0125',
       diversity: '0.3004',
@@ -44,7 +44,7 @@ export default function AcademicBenchmarks() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
           <BookOpen size={24} color="#a855f7" />
           <h2 style={{ color: '#fff', margin: 0, fontSize: '22px' }}>
-            Academic Evaluation Benchmarks (Chapter 10)
+            Academic Evaluation Benchmarks
           </h2>
         </div>
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6' }}>
@@ -98,7 +98,7 @@ export default function AcademicBenchmarks() {
             Group [1, 2, 3] Technique Selected
           </div>
           <h4 style={{ color: '#fff', fontSize: '15px', marginBottom: '6px' }}>
-            Content-Based Filtering via Cosine Similarity [Ch 3/4]
+            Content-Based Filtering via Cosine Similarity
           </h4>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
             Vectorizes anime into 29 one-hot genre attributes. Constructs user taste profile centroid $\vec{p}_u$ from rating history and computes pairwise cosine similarity:
@@ -115,7 +115,7 @@ export default function AcademicBenchmarks() {
             Group [4, 5, 6] Technique Selected
           </div>
           <h4 style={{ color: '#fff', fontSize: '15px', marginBottom: '6px' }}>
-            Knowledge-Based Recommendation (Constraint + CBR) [Ch 7]
+            Knowledge-Based Recommendation (Constraint + CBR)
           </h4>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
             Implements hard constraint filtering (episode limits, minimum ratings) followed by multi-attribute Case-Based Reasoning (CBR) utility distance on length, quality, and genre overlap.
@@ -138,7 +138,7 @@ export default function AcademicBenchmarks() {
             <strong>Why 1+1 Hybrid?</strong> Content-Based Filtering alone overspecializes (low diversity $0.2638$). Combining it with Knowledge-Based CBR raises diversity to $0.3004$ while maintaining high precision.
           </li>
           <li>
-            <strong>How Cold-Start is Handled:</strong> Uses a <em>Switching Hybrid (Chapter 10.2)</em>. If $|R_u| = 0$, the system automatically switches to Knowledge-Based + Popularity routing, preventing cold-start failure.
+            <strong>How Cold-Start is Handled:</strong> Uses a <em>Switching Hybrid strategy</em>. If $|R_u| = 0$, the system automatically switches to Knowledge-Based + Popularity routing, preventing cold-start failure.
           </li>
           <li>
             <strong>Why Train/Test Split was used:</strong> 3,706 ratings (20%) were held out in a test vault to simulate unobserved future choices and calculate objective Precision@10 without data leakage.

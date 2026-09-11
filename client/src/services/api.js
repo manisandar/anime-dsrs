@@ -101,7 +101,7 @@ export const api = {
     );
   },
 
-  // 4. Content-Based Item Similarity: "More Like This" (Ch 4)
+  // 4. Content-Based Item Similarity: "More Like This"
   async getSimilarAnime(id, limit = 8) {
     return tryRemoteOrLocal(
       async () => {
@@ -118,7 +118,7 @@ export const api = {
     );
   },
 
-  // 5. Popularity-Based Recommendations: "Popular Right Now" (Ch 3)
+  // 5. Popularity-Based Recommendations: "Popular Right Now"
   async getPopularRecommendations({ topK = 18 } = {}) {
     return tryRemoteOrLocal(
       async () => {
@@ -133,7 +133,7 @@ export const api = {
     );
   },
 
-  // 6. Personalized Content-Based Filtering: "Recommended For You" (Ch 4)
+  // 6. Personalized Content-Based Filtering: "Recommended For You"
   async getPersonalizedCBF({ sessionRatings = [], topK = 12 }) {
     return tryRemoteOrLocal(
       async () => {
@@ -156,7 +156,7 @@ export const api = {
     );
   },
 
-  // 7. Knowledge-Based Recommendation: "Find What Fits" (Ch 7)
+  // 7. Knowledge-Based Recommendation: "Find What Fits"
   async getKnowledgeBased({ constraints = {}, mood = null, topK = 18 }) {
     return tryRemoteOrLocal(
       async () => {
@@ -180,7 +180,7 @@ export const api = {
     );
   },
 
-  // 8. 1+1 Hybrid Recommendation: "Smart Match" (Ch 10)
+  // 8. 1+1 Hybrid Recommendation: "Smart Match"
   async getHybridRecommendations({ sessionRatings = [], constraints = {}, mood = null, topK = 18 }) {
     return tryRemoteOrLocal(
       async () => {

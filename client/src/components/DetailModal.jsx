@@ -79,17 +79,17 @@ export default function DetailModal({ anime, onClose, onSelectSimilar }) {
           </div>
         </div>
 
-        {/* Mathematical Component Breakdown (Ch 10 & 14) */}
+        {/* Mathematical Component Breakdown */}
         {anime.component_scores && (
           <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Sliders size={14} color="#a855f7" />
-              1+1 Hybrid Mathematical Scoring (Chapter 10)
+              1+1 Hybrid Mathematical Scoring
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'center' }}>
               <div style={{ padding: '10px', background: 'rgba(168,85,247,0.1)', borderRadius: '8px', border: '1px solid rgba(168,85,247,0.3)' }}>
-                <div style={{ fontSize: '11px', color: '#d8b4fe' }}>Content-Based Sim [Ch 3/4]</div>
+                <div style={{ fontSize: '11px', color: '#d8b4fe' }}>Content-Based Sim</div>
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#fff' }}>
                   {anime.component_scores.content_based}
                 </div>
@@ -97,7 +97,7 @@ export default function DetailModal({ anime, onClose, onSelectSimilar }) {
               </div>
 
               <div style={{ padding: '10px', background: 'rgba(6,182,212,0.1)', borderRadius: '8px', border: '1px solid rgba(6,182,212,0.3)' }}>
-                <div style={{ fontSize: '11px', color: '#67e8f9' }}>Knowledge-Based [Ch 7]</div>
+                <div style={{ fontSize: '11px', color: '#67e8f9' }}>Knowledge-Based</div>
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#fff' }}>
                   {anime.component_scores.knowledge_based}
                 </div>
@@ -105,7 +105,7 @@ export default function DetailModal({ anime, onClose, onSelectSimilar }) {
               </div>
 
               <div style={{ padding: '10px', background: 'rgba(245,158,11,0.1)', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)' }}>
-                <div style={{ fontSize: '11px', color: '#fde68a' }}>Popularity Prior [Ch 2]</div>
+                <div style={{ fontSize: '11px', color: '#fde68a' }}>Popularity Prior</div>
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#fff' }}>
                   {anime.component_scores.popularity}
                 </div>
@@ -133,11 +133,11 @@ export default function DetailModal({ anime, onClose, onSelectSimilar }) {
           </div>
         </div>
 
-        {/* Content-Based Similar Anime (Chapter 3/4 Cosine Similarity) */}
+        {/* Content-Based Similar Anime */}
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} color="#a855f7" />
-            Most Similar Titles via 29-Genre Cosine Similarity (Ch 3/4)
+            Most Similar Titles via 29-Genre Cosine Similarity
           </div>
 
           {loadingSimilar ? (

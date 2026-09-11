@@ -84,12 +84,12 @@ flowchart TD
 
 ### Paradigm Breakdown & Mathematical Formulations
 
-#### 1. Popularity-Based Recommendation (Chapter 3)
+#### 1. Popularity-Based Recommendation
 Acts as the cold-start baseline on the Home page and remains visible independently:
 $$WR = \frac{v}{v + m} \cdot R + \frac{m}{v + m} \cdot C$$
 *Where $v$ = vote count, $m$ = threshold prior (100 votes), $R$ = average rating, and $C$ = catalog mean rating (3.65).*
 
-#### 2. Content-Based Filtering (CBF) (Chapter 4)
+#### 2. Content-Based Filtering (CBF)
 - **Item-to-Item ("More Like This"):**
   Evaluates Cosine Similarity between a target anime's 29-genre vector $\mathbf{v}_A$ and candidate $\mathbf{v}_I$:
   $$\text{CosineSimilarity}(\mathbf{v}_A, \mathbf{v}_I) = \frac{\mathbf{v}_A \cdot \mathbf{v}_I}{\|\mathbf{v}_A\|_2 \|\mathbf{v}_I\|_2}$$
@@ -99,7 +99,7 @@ $$WR = \frac{v}{v + m} \cdot R + \frac{m}{v + m} \cdot C$$
   $$\mathbf{p}_u = \text{ReLU}\left( \sum_{i} w_i \mathbf{v}_i \right), \quad \hat{\mathbf{p}}_u = \frac{\mathbf{p}_u}{\|\mathbf{p}_u\|_2}$$
   Candidates are ranked by $\text{CosineSimilarity}(\hat{\mathbf{p}}_u, \mathbf{v}_I)$.
 
-#### 3. Knowledge-Based Recommendation (KBR) (Chapter 7)
+#### 3. Knowledge-Based Recommendation (KBR)
 Evaluates domain knowledge rules and hard constraints:
 1. **Viewing Commitment Rule:**
    - $\le 13$ episodes $\rightarrow$ Short commitment
@@ -114,7 +114,7 @@ Evaluates domain knowledge rules and hard constraints:
    - *Dark*: `psychological`, `thriller`, `horror`, `mystery`
    - *Emotional*: `drama`, `romance`, `slice of life`
 
-#### 4. 1+1 Hybrid Recommendation (Chapter 10)
+#### 4. 1+1 Hybrid Recommendation
 On the **Smart Match** page, combines independent scores:
 $$\text{Hybrid Score} = 0.50 \cdot \text{Score}_{\text{CBF}}(\hat{\mathbf{p}}_u, I) + 0.50 \cdot \text{Score}_{\text{KBR}}(Q, I)$$
 Displays both independent scores: **Taste Match %** + **Requirement Fit %** $\rightarrow$ **Overall Hybrid Score %**.
@@ -313,10 +313,10 @@ python3 recommender/evaluate.py
 ==========================================================================================
 Recommendation Paradigm          | Precision@10 | Recall@10  | Diversity  | Coverage  
 ------------------------------------------------------------------------------------------
-Popularity Baseline [Ch 3]       | 0.3000       | 0.0158     | 0.7801     | 0.8%      
-Content-Based CBF [Ch 4]         | 0.5500       | 0.0380     | 0.1334     | 3.2%      
-Knowledge-Based KBR [Ch 7]       | 0.7750       | 0.0933     | 0.5248     | 2.4%      
-1+1 Hybrid (CBF+KBR) [Ch 10]     | 1.0000       | 0.1175     | 0.2017     | 3.2%      
+Popularity Baseline              | 0.3000       | 0.0158     | 0.7801     | 0.8%      
+Content-Based CBF                | 0.5500       | 0.0380     | 0.1334     | 3.2%      
+Knowledge-Based KBR              | 0.7750       | 0.0933     | 0.5248     | 2.4%      
+1+1 Hybrid (CBF+KBR)             | 1.0000       | 0.1175     | 0.2017     | 3.2%      
 ==========================================================================================
 ```
 

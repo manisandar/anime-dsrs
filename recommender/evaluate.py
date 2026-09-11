@@ -3,10 +3,10 @@ Academic Evaluation Benchmark Suite for Anime-DSRS.
 CSX/ITX 4207: Decision Support & Recommendation System, Assumption University.
 
 Evaluates the 4 Distinct Paradigms:
-1. Baseline: Popularity / Bayesian Rating Consensus (Ch 3)
-2. Group [1,2,3]: Content-Based Filtering via Session Rating Profile (Ch 4)
-3. Group [4,5,6]: Knowledge-Based Recommendation via Constraints & Rules (Ch 7)
-4. Group [7]: 1+1 Hybrid (CBF Taste + KBR Situation Requirements) (Ch 10)
+1. Baseline: Popularity / Bayesian Rating Consensus
+2. Group [1,2,3]: Content-Based Filtering via Session Rating Profile
+3. Group [4,5,6]: Knowledge-Based Recommendation via Constraints & Rules
+4. Group [7]: 1+1 Hybrid (CBF Taste + KBR Situation Requirements)
 
 Metrics Computed:
 - Precision@10: Fraction of top-10 recommendations that match target test profile
@@ -66,10 +66,10 @@ def run_evaluation_benchmarks(catalog_path: str):
     ]
 
     models = [
-        "Popularity Baseline [Ch 3]",
-        "Content-Based CBF [Ch 4]",
-        "Knowledge-Based KBR [Ch 7]",
-        "1+1 Hybrid (CBF+KBR) [Ch 10]"
+        "Popularity Baseline",
+        "Content-Based CBF",
+        "Knowledge-Based KBR",
+        "1+1 Hybrid (CBF+KBR)"
     ]
 
     benchmark_results = {}

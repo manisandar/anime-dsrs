@@ -3,15 +3,15 @@
  * CSX/ITX 4207: Decision Support and Recommendation System, Assumption University.
  * 
  * Provides 100% offline, zero-dependency, free static execution of all 4 paradigms:
- * 1. Bayesian Weighted Popularity (Ch 3)
- * 2. 29-Genre Cosine Similarity Content-Based Filtering (Ch 4)
+ * 1. Bayesian Weighted Popularity
+ * 2. 29-Genre Cosine Similarity Content-Based Filtering
  *    - Item-to-Item ("More Like This")
  *    - Personalized Session Profile ("Recommended For You")
- * 3. Knowledge-Based Recommendation (Ch 7)
+ * 3. Knowledge-Based Recommendation
  *    - Hard constraints (episodes, rating, genres)
  *    - Domain rules (mood affinity)
  *    - Rule evaluation explanations
- * 4. 1+1 Hybrid Fusion (Ch 10)
+ * 4. 1+1 Hybrid Fusion
  *    - 50% CBF User Taste + 50% KBR Situational Fit
  */
 
@@ -269,7 +269,7 @@ export const localEngine = {
     };
   },
 
-  // 6. User Profile Vector Construction (Ch 4)
+  // 6. User Profile Vector Construction
   buildUserProfile(sessionRatings = []) {
     const dim = 29;
     const profile = new Array(dim).fill(0.0);
@@ -360,7 +360,7 @@ export const localEngine = {
     };
   },
 
-  // 8. Knowledge-Based Rule Evaluation (Ch 7)
+  // 8. Knowledge-Based Rule Evaluation
   evaluateKbrRules(anime, constraints = {}, mood = null) {
     const rules = [];
     let hardPassed = true;
