@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Generates a clean, modern, 4-page PDF document explaining the Decision Support
-and Recommendation Systems used across every page in the ANIVIBE web application.
-Zero mathematical equations - simple, plain-English explanations.
+Generates an executive, highly readable PDF guide for ANIVIBE.
+- Body font size minimum of 13.5px (clean, large, legible).
+- Minimal words, punchy bullet points, no dense text or equations.
+- Visually appealing alternating pastel background cards.
+- Clear page-by-page structure with comfortable spacing.
 """
 
 import os
@@ -12,11 +14,11 @@ HTML_CONTENT = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ANIVIBE — Decision Support & Recommender Systems Page-by-Page Guide</title>
+<title>ANIVIBE — Decision Support & Recommender Systems Page Guide</title>
 <style>
   @page {
     size: A4;
-    margin: 12mm 15mm 12mm 15mm;
+    margin: 14mm 16mm 14mm 16mm;
   }
   * {
     box-sizing: border-box;
@@ -25,167 +27,179 @@ HTML_CONTENT = """<!DOCTYPE html>
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #1e293b;
+    color: #0f172a;
     background: #ffffff;
-    line-height: 1.5;
-    font-size: 12.5px;
+    line-height: 1.6;
+    font-size: 13.5px;
     margin: 0;
     padding: 0;
   }
 
-  /* Header Section */
+  /* Document Header */
   .header {
     border-bottom: 2px solid #e2e8f0;
     padding-bottom: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
   .header-tag {
     display: inline-block;
-    font-size: 9.5px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    background: #f1f5f9;
-    color: #475569;
-    margin-bottom: 5px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: #ede9fe;
+    color: #6d28d9;
+    margin-bottom: 6px;
   }
   h1 {
-    font-size: 21px;
+    font-size: 24px;
     font-weight: 800;
     color: #0f172a;
-    margin: 0 0 4px 0;
-    letter-spacing: -0.3px;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.4px;
   }
   .subtitle {
-    font-size: 12px;
-    color: #64748b;
-    margin: 0 0 8px 0;
+    font-size: 13.5px;
+    color: #475569;
+    margin: 0 0 10px 0;
   }
   .meta-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
-    font-size: 10.5px;
+    font-size: 12px;
     color: #475569;
   }
   .meta-bar strong {
     color: #0f172a;
   }
 
-  /* Executive Overview Callout */
-  .overview-callout {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 9px 12px;
-    margin-bottom: 14px;
-    font-size: 11.5px;
-    color: #334155;
-    line-height: 1.45;
-  }
-  .overview-callout strong {
-    color: #0f172a;
+  /* Page Break Rule */
+  .page-break {
+    page-break-before: always;
   }
 
-  /* Page Section Cards */
-  .page-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 14px;
-    background: #ffffff;
-    page-break-inside: avoid;
-  }
-  .page-title-row {
+  /* Section Title */
+  .section-banner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 12px;
     padding-bottom: 6px;
-    margin-bottom: 8px;
+    border-bottom: 1.5px solid #e2e8f0;
   }
-  .page-title {
-    font-size: 14.5px;
-    font-weight: 700;
+  .section-title {
+    font-size: 18px;
+    font-weight: 800;
     color: #0f172a;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
   .route-pill {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 10px;
+    font-size: 12px;
     background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: #475569;
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: #334155;
+    font-weight: 600;
   }
-  .badge {
-    font-size: 9.5px;
+  .role-badge {
+    font-size: 11px;
     font-weight: 700;
-    padding: 2.5px 7px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .badge-recommender { background: #ede9fe; color: #6d28d9; }
-  .badge-decision { background: #e0f2fe; color: #0369a1; }
-  .badge-hybrid { background: #fef3c7; color: #b45309; }
+  .role-purple { background: #ede9fe; color: #6d28d9; }
+  .role-blue   { background: #e0f2fe; color: #0369a1; }
+  .role-amber  { background: #fef3c7; color: #b45309; }
+  .role-green  { background: #dcfce7; color: #15803d; }
 
-  .user-purpose {
-    font-size: 11.5px;
-    color: #475569;
+  /* User Goal Callout */
+  .goal-callout {
     background: #f8fafc;
-    border-left: 3px solid #cbd5e1;
-    padding: 5px 9px;
-    margin-bottom: 9px;
-    border-radius: 0 4px 4px 0;
+    border-left: 4px solid #94a3b8;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px;
+    color: #334155;
   }
-  .user-purpose strong { color: #1e293b; }
+  .goal-callout strong {
+    color: #0f172a;
+  }
 
-  /* Subsection inside a page */
-  .system-item {
+  /* Appealing Alternating Cards */
+  .feature-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  
+  /* Alternating Colors */
+  .theme-violet {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+  }
+  .theme-sky {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+  }
+  .theme-mint {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .theme-amber {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+  }
+  .theme-rose {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 8px;
   }
-  .system-item:last-child {
-    margin-bottom: 0;
-  }
-  .system-name {
+  .card-title {
+    font-size: 15.5px;
     font-weight: 700;
-    font-size: 12.5px;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 2px;
+    color: #0f172a;
   }
-  .system-name .tag {
-    font-size: 8.5px;
+  .type-tag {
+    font-size: 10.5px;
     font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 3px;
+    padding: 2px 8px;
+    border-radius: 4px;
     text-transform: uppercase;
   }
   .tag-rec { background: #ede9fe; color: #6d28d9; }
   .tag-dec { background: #dbeafe; color: #1d4ed8; }
   .tag-both { background: #dcfce7; color: #15803d; }
 
-  p {
-    margin: 0 0 4px 0;
+  /* Compact Bullet Points */
+  ul.points {
+    margin: 0;
+    padding-left: 20px;
+  }
+  ul.points li {
+    margin-bottom: 5px;
     color: #334155;
-    font-size: 12px;
+    font-size: 13.5px;
   }
-  ul {
-    margin: 3px 0 5px 0;
-    padding-left: 16px;
+  ul.points li:last-child {
+    margin-bottom: 0;
   }
-  li {
-    margin-bottom: 2px;
-    color: #334155;
-    font-size: 11.5px;
-  }
-  li strong {
+  ul.points strong {
     color: #0f172a;
   }
 
@@ -193,122 +207,124 @@ HTML_CONTENT = """<!DOCTYPE html>
   .summary-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 8px;
-    font-size: 10.5px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    overflow: hidden;
   }
   .summary-table th, .summary-table td {
-    padding: 6px 8px;
+    padding: 9px 12px;
     border: 1px solid #e2e8f0;
     text-align: left;
   }
   .summary-table th {
-    background: #f8fafc;
-    color: #1e293b;
+    background: #f1f5f9;
+    color: #0f172a;
     font-weight: 700;
   }
   .summary-table tr:nth-child(even) td {
-    background: #fbfcfe;
+    background: #f8fafc;
   }
 
-  .defense-box {
+  /* Defense Summary Box */
+  .defense-card {
     background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 6px;
-    padding: 9px 12px;
-    margin-top: 10px;
-    font-size: 11.5px;
+    border: 1.5px solid #86efac;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 14px;
   }
-  .defense-box strong { color: #166534; }
-
-  .page-break {
-    page-break-before: always;
+  .defense-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #166534;
+    margin-bottom: 6px;
+  }
+  .defense-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #1e3a24;
+    line-height: 1.55;
   }
 
+  /* Footer */
   .footer {
     border-top: 1px solid #e2e8f0;
-    padding-top: 6px;
-    margin-top: 12px;
+    padding-top: 8px;
+    margin-top: 16px;
     display: flex;
     justify-content: space-between;
-    font-size: 9.5px;
+    font-size: 11px;
     color: #94a3b8;
   }
 </style>
 </head>
 <body>
 
-  <!-- ==================== SHEET 1: HEADER & HOME PAGE ==================== -->
+  <!-- ==================== SHEET 1: HOME PAGE ==================== -->
   <div class="header">
-    <div class="header-tag">Academic Systems Reference</div>
-    <h1>ANIVIBE — Decision Support & Recommender Systems Guide</h1>
-    <div class="subtitle">Page-by-Page Guide to Systems, Decision Tools, and User Experience (Plain English, Zero Equations)</div>
+    <div class="header-tag">Executive Systems Reference</div>
+    <h1>ANIVIBE — Decision Support & Recommender Guide</h1>
+    <div class="subtitle">Clean, Page-by-Page Architectural Breakdown (Zero Equations • Plain English)</div>
     <div class="meta-bar">
-      <div><strong>Course:</strong> CSX/ITX 4207 Decision Support & Recommender Systems</div>
+      <div><strong>Course:</strong> CSX/ITX 4207 Decision Support Systems</div>
       <div><strong>Institution:</strong> Assumption University</div>
       <div><strong>Live Demo:</strong> minkhanttin-anivibe.static.hf.space</div>
     </div>
   </div>
 
-  <div class="overview-callout">
-    <strong>Executive Architectural Summary:</strong> ANIVIBE combines two complementary technologies to eliminate the entertainment Paradox of Choice across 1,255 Crunchyroll anime titles:
-    <strong>Recommender Systems</strong> automatically discover matching content based on community wisdom (Popularity), thematic similarity (Content-Based), or situational boundaries (Knowledge-Based).
-    <strong>Decision Support Systems</strong> give users transparent evidence (rating distribution histograms, commitment badges, explainable checklists, and side-by-side trade-off matrices) so they can make confident viewing decisions.
+  <div class="section-banner">
+    <div class="section-title">
+      <span>1. Home Page</span>
+      <span class="route-pill">/</span>
+    </div>
+    <span class="role-badge role-purple">Popularity & Personalization</span>
   </div>
 
-  <!-- PAGE 1: HOME PAGE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 1: Home Page</span>
-        <span class="route-pill">/</span>
-      </div>
-      <div>
-        <span class="badge badge-recommender">Popularity & Personalization</span>
-      </div>
-    </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> The welcome portal. Solves first-time exploration for new users and delivers a tailored feed for returning users who have rated anime.
-    </div>
+  <div class="goal-callout">
+    <strong>User Goal:</strong> Immediate discovery. Delivers safe recommendations for new visitors and an evolving, personalized feed for users who rate shows.
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>1. Popular Right Now</span>
-        <span class="tag tag-rec">Popularity-Based Recommender</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Recommends the most trusted, universally acclaimed anime across the community. It balances high review ratings with total review counts to ensure that anime with thousands of votes outrank titles with only a single 5-star review.
-      </p>
-      <p>
-        <strong>Why it's used (Cold-Start Solution):</strong> When a new user opens the website for the very first time, the system has zero data on their taste. Rather than leaving the screen blank or guessing randomly, Popularity provides a safe, verified starting catalog immediately.
-      </p>
+  <!-- Card 1: Popular Right Now (Violet Tint) -->
+  <div class="feature-card theme-violet">
+    <div class="card-header">
+      <span class="card-title">1. Popular Right Now</span>
+      <span class="type-tag tag-rec">Popularity-Based Recommender</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Ranks anime by combining high rating scores with total review volume so titles with thousands of votes outrank one-off 5-star reviews.</li>
+      <li><strong>Why we use it:</strong> Solves the <em>Cold-Start problem</em>. When a new visitor has 0 ratings, the system provides verified, trusted community classics immediately.</li>
+      <li><strong>User Benefit:</strong> Instant viewing without having to search or set preferences.</li>
+    </ul>
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>2. Recommended For You</span>
-        <span class="tag tag-rec">Content-Based Filtering</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Listens to your 1-to-5 star ratings in the app. When you give 5 stars to fantasy or action shows, the system learns what you like, increases the importance of those genres, and recommends unwatched anime sharing those exact themes.
-      </p>
-      <p>
-        <strong>Decision Support Benefit:</strong> Relieves choice overload. Instead of searching through 1,200 titles, the user gets an evolving, tailored feed matching their taste.
-      </p>
+  <!-- Card 2: Recommended For You (Sky Blue Tint) -->
+  <div class="feature-card theme-sky">
+    <div class="card-header">
+      <span class="card-title">2. Recommended For You</span>
+      <span class="type-tag tag-rec">Content-Based Filtering</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Learns your taste from your 1 to 5-star ratings. High ratings boost preferred genres; low ratings penalize unwanted themes.</li>
+      <li><strong>Why we use it:</strong> Automatically curates unrated anime that match your individual personality.</li>
+      <li><strong>User Benefit:</strong> Eliminates browsing fatigue by showing shows you are statistically likely to enjoy.</li>
+    </ul>
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>3. Interactive Decision Onboarding Banner</span>
-        <span class="tag tag-dec">Decision Support Prompt</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> If the visitor has zero ratings, a friendly card guides them to rate a few anime, explaining how rating unlocks personalized recommendations.
-      </p>
+  <!-- Card 3: Decision Onboarding Banner (Mint Tint) -->
+  <div class="feature-card theme-mint">
+    <div class="card-header">
+      <span class="card-title">3. Interactive Onboarding Banner</span>
+      <span class="type-tag tag-dec">Decision Support Prompt</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Prompts first-time visitors to rate their first 1–2 titles with quick-click stars.</li>
+      <li><strong>Why we use it:</strong> Actively guides users to calibrate the recommendation engine.</li>
+    </ul>
   </div>
 
   <div class="footer">
-    <div>ANIVIBE Architectural Guide — Assumption University CSX/ITX 4207</div>
+    <div>ANIVIBE Architectural Guide — Assumption University</div>
     <div>Page 1 of 4</div>
   </div>
 
@@ -316,108 +332,85 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   <!-- ==================== SHEET 2: DETAIL & BROWSE ==================== -->
 
-  <!-- PAGE 2: ANIME DETAIL PAGE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 2: Anime Detail Page</span>
-        <span class="route-pill">/anime/:id</span>
-      </div>
-      <div>
-        <span class="badge badge-decision">Item Similarity & Evidence</span>
-      </div>
+  <!-- SECTION 2: ANIME DETAIL PAGE -->
+  <div class="section-banner">
+    <div class="section-title">
+      <span>2. Anime Detail Page</span>
+      <span class="route-pill">/anime/:id</span>
     </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> Investigating an individual anime to answer: <em>"Is this specific show worth my time and attention right now?"</em>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>1. More Like This (Netflix-Style Horizontal Carousel)</span>
-        <span class="tag tag-rec">Item-to-Item Content-Based Filtering</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Looks strictly at the anime currently on screen and calculates which other anime in the catalog share the most genre attributes.
-      </p>
-      <p>
-        <strong>Why it's used:</strong> Operates completely independently of user rating history. If you fall in love with a specific anime, you can immediately find direct sister titles with the same tone and pacing.
-      </p>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>2. Viewer Rating Distribution (1 to 5 Stars Breakdown)</span>
-        <span class="tag tag-dec">Community Consensus Decision Support</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Displays a golden bar chart directly inside the anime hero card showing what percentage of viewers gave 5 stars, 4 stars, down to 1 star.
-      </p>
-      <p>
-        <strong>Why it's used (Decision Support):</strong> An average rating like "4.1" can be misleading. Seeing the distribution helps users spot whether an anime is universally beloved (almost all 5 stars) or polarizing/controversial (lots of 1 stars mixed with 5 stars).
-      </p>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>3. Commitment & Time Investment Badges</span>
-        <span class="tag tag-dec">Constraint Evaluation</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Flags each anime as <em>Short (&le; 13 episodes)</em>, <em>Medium (14–26 episodes)</em>, or <em>Long (&gt; 26 episodes)</em> so users can budget their evening or weekend.
-      </p>
-    </div>
+    <span class="role-badge role-blue">Item Similarity & Evidence</span>
   </div>
 
-  <!-- PAGE 3: BROWSE & FIND PAGE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 3: Browse & Find Page</span>
-        <span class="route-pill">/browse</span>
-      </div>
-      <div>
-        <span class="badge badge-decision">Multi-Attribute Search & Rule-Based Advisory</span>
-      </div>
-    </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> Provides two modes: self-guided catalog exploration (Browse) or situation-aware digital consultation (Find).
-    </div>
+  <div class="goal-callout">
+    <strong>User Goal:</strong> Deciding whether a specific anime is worth your free time before committing hours or weeks to watch it.
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>Mode A: Catalog Discovery</span>
-        <span class="tag tag-dec">Exploratory Decision Support</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Allows full-catalog search with interactive genre tags, instant title searching, and multi-criteria sorting (by community popularity, score, or title).
-      </p>
-      <p>
-        <strong>Why it's used:</strong> Empowers users when they already have a specific keyword in mind or want to explore a single genre category (e.g. Sci-Fi).
-      </p>
+  <!-- Card 1: More Like This (Amber Tint) -->
+  <div class="feature-card theme-amber">
+    <div class="card-header">
+      <span class="card-title">1. More Like This (Netflix-Style Carousel)</span>
+      <span class="type-tag tag-rec">Item-to-Item Content Filtering</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Analyzes the genre profile of the anime on screen and recommends the closest sister titles in the catalog.</li>
+      <li><strong>Why we use it:</strong> Works independently of user rating history. If you loved this show, you can instantly find similar ones with one click.</li>
+    </ul>
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>Mode B: Find What Fits</span>
-        <span class="tag tag-rec">Knowledge-Based Recommender (KBR)</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Acts as an expert advisor. You declare your real-world situational requirements:
-      </p>
-      <ul>
-        <li><strong>Episode Budget:</strong> Set a strict ceiling (e.g., maximum 26 episodes for a weekend binge).</li>
-        <li><strong>Quality Threshold:</strong> Set a minimum standard (e.g., ratings &ge; 4.0 only).</li>
-        <li><strong>Required & Avoided Genres:</strong> Declare what must be present (e.g., Mystery) and what to exclude (e.g., No Horror).</li>
-        <li><strong>Viewing Mood:</strong> Pick an emotional vibe (<em>Exciting, Chill, Dark, or Emotional</em>).</li>
-      </ul>
-      <p>
-        <strong>Explainable Decision Verdicts:</strong> Every recommended title displays an itemized evaluation report (e.g. <em>"✓ Episode Budget: 12 eps satisfies &le; 26"</em> and <em>"✓ Quality: 4.4 rating meets &ge; 4.0"</em>) so users understand exactly why the anime was selected.
-      </p>
+  <!-- Card 2: Viewer Rating Distribution (Rose Tint) -->
+  <div class="feature-card theme-rose">
+    <div class="card-header">
+      <span class="card-title">2. Viewer Rating Distribution Histogram</span>
+      <span class="type-tag tag-dec">Community Consensus Support</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Displays an amber bar breakdown showing the percentage of 5-star, 4-star, down to 1-star ratings.</li>
+      <li><strong>Decision Support Value:</strong> An average rating (e.g. 4.1) hides controversy. The histogram reveals whether an anime is universally loved or polarizing.</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 3: BROWSE & FIND PAGE -->
+  <div class="section-banner" style="margin-top: 16px;">
+    <div class="section-title">
+      <span>3. Browse & Find Page</span>
+      <span class="route-pill">/browse</span>
+    </div>
+    <span class="role-badge role-green">Search & Rule Advisory</span>
+  </div>
+
+  <!-- Card 3: Mode A - Catalog Discovery (Sky Tint) -->
+  <div class="feature-card theme-sky">
+    <div class="card-header">
+      <span class="card-title">Mode A: Catalog Discovery</span>
+      <span class="type-tag tag-dec">Exploratory Decision Support</span>
+    </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Live search, genre filter pills, and multi-criteria sorting (by community popularity, review score, or title).</li>
+      <li><strong>Why we use it:</strong> Empowers self-guided browsing when users want to explore a single category.</li>
+    </ul>
+  </div>
+
+  <!-- Card 4: Mode B - Find What Fits (Violet Tint) -->
+  <div class="feature-card theme-violet">
+    <div class="card-header">
+      <span class="card-title">Mode B: Find What Fits</span>
+      <span class="type-tag tag-rec">Knowledge-Based Recommender (KBR)</span>
+    </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Acts as an expert advisor. You set your situational boundaries:
+        <ul>
+          <li><strong>Episode Ceiling:</strong> e.g. Maximum 26 episodes for a weekend binge.</li>
+          <li><strong>Quality Threshold:</strong> e.g. Ratings &ge; 4.0 stars only.</li>
+          <li><strong>Genre Constraints:</strong> Must include Mystery, strictly exclude Horror.</li>
+          <li><strong>Emotional Mood:</strong> Exciting, Chill, Dark, or Emotional.</li>
+        </ul>
+      </li>
+      <li><strong>Explainable Verdicts:</strong> Every card shows an itemized checklist of which rules passed.</li>
+    </ul>
   </div>
 
   <div class="footer">
-    <div>ANIVIBE Architectural Guide — Assumption University CSX/ITX 4207</div>
+    <div>ANIVIBE Architectural Guide — Assumption University</div>
     <div>Page 2 of 4</div>
   </div>
 
@@ -425,199 +418,169 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   <!-- ==================== SHEET 3: SMART MATCH & DECISION CENTER ==================== -->
 
-  <!-- PAGE 4: SMART MATCH PAGE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 4: Smart Match Page (Flagship)</span>
-        <span class="route-pill">/smart-match</span>
-      </div>
-      <div>
-        <span class="badge badge-hybrid">1+1 Hybrid Fusion Engine</span>
-      </div>
+  <!-- SECTION 4: SMART MATCH PAGE -->
+  <div class="section-banner">
+    <div class="section-title">
+      <span>4. Smart Match Page (Flagship)</span>
+      <span class="route-pill">/smart-match</span>
     </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> Solves the most common dilemma: <em>"I want something that matches my genuine taste, but also fits my available time and mood right now."</em>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>1+1 Hybrid Fusion Recommender</span>
-        <span class="tag tag-both">Hybrid Recommender + Decision Support</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Concurrently computes two independent scores and merges them into a single recommendation:
-      </p>
-      <ul>
-        <li><strong>50% User Taste Affinity (Content-Based):</strong> Evaluates how closely the anime's genres match your rating history.</li>
-        <li><strong>50% Requirement Fit (Knowledge-Based):</strong> Evaluates how well the anime satisfies your episode budget, quality threshold, and mood.</li>
-      </ul>
-      <p>
-        <strong>Why it's used:</strong> Content-based filtering alone might suggest a 500-episode classic when you only have one evening free. Knowledge-based filtering alone might find a short show in a genre you dislike. The 1+1 Hybrid guarantees you get a title you love <em>and</em> have time to watch.
-      </p>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>Transparent Dual-Score Match Badges</span>
-        <span class="tag tag-dec">Decision Transparency</span>
-      </div>
-      <p>
-        Each result card displays two distinct progress bars: <strong>Taste Match %</strong> (purple) and <strong>Requirement Fit %</strong> (cyan), giving users complete clarity into why the title was recommended.
-      </p>
-    </div>
-
-    <div class="system-item">
-      <div class="system-name">
-        <span>Cold-Start Safeguard</span>
-        <span class="tag tag-dec">System Reliability</span>
-      </div>
-      <p>
-        If a user has 0 ratings, the system prompts them to rate a few anime first or smoothly routes them to Knowledge-Based recommendations, ensuring zero crashes or empty states.
-      </p>
-    </div>
+    <span class="role-badge role-purple">1+1 Hybrid Fusion</span>
   </div>
 
-  <!-- PAGE 5: DECISION CENTER -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 5: Decision Center</span>
-        <span class="route-pill">/decision-center</span>
-      </div>
-      <div>
-        <span class="badge badge-decision">Multi-Criteria Decision Analysis (MCDA)</span>
-      </div>
-    </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> Resolves final indecision when a user is torn between 2 or 3 finalist anime.
-    </div>
+  <div class="goal-callout">
+    <strong>User Goal:</strong> Solves the real-world dilemma: <em>"I want a show that fits my authentic personal taste, but also fits my available time and mood right now."</em>
+  </div>
 
-    <div class="system-item">
-      <div class="system-name">
-        <span>Side-by-Side Comparison Matrix</span>
-        <span class="tag tag-dec">Multi-Criteria Decision Making</span>
-      </div>
-      <p>
-        <strong>What it does:</strong> Displays up to 3 selected anime side-by-side across key comparison criteria:
-      </p>
-      <ul>
-        <li><strong>Time Investment:</strong> Total episodes and estimated hours required to complete the show.</li>
-        <li><strong>Quality vs. Popularity:</strong> Direct comparison of rating score versus total community review volume.</li>
-        <li><strong>Rating Distributions:</strong> Compare the 5-star vs 1-star ratios of each candidate side by side.</li>
-        <li><strong>Thematic Comparison:</strong> Shows shared genres and unique thematic elements between the choices.</li>
-      </ul>
-      <p>
-        <strong>Decision Support Benefit:</strong> Eliminates browser tab clutter and mental fatigue by organizing all trade-offs onto a single, structured decision dashboard.
-      </p>
+  <!-- Card 1: 1+1 Hybrid Recommender (Mint Tint) -->
+  <div class="feature-card theme-mint">
+    <div class="card-header">
+      <span class="card-title">1+1 Hybrid Fusion Recommender</span>
+      <span class="type-tag tag-both">Hybrid Recommender + Decision Support</span>
     </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Calculates two distinct scores and fuses them 50/50:
+        <ul>
+          <li><strong>50% Taste Score (Content-Based):</strong> Does this match your past rating preferences?</li>
+          <li><strong>50% Fit Score (Knowledge-Based):</strong> Does this fit your current episode limit and mood?</li>
+        </ul>
+      </li>
+      <li><strong>Why it's essential:</strong>
+        Pure taste filtering might recommend a 500-episode show when you only have one evening free.
+        Pure constraint filtering might find a short show in a genre you dislike.
+        The 1+1 Hybrid guarantees you get a title you love <strong>and</strong> have time to finish.
+      </li>
+      <li><strong>Dual-Score Transparency:</strong> Result cards display separate <strong>Taste Match %</strong> and <strong>Requirement Fit %</strong> bars for complete clarity.</li>
+    </ul>
+  </div>
+
+  <!-- SECTION 5: DECISION CENTER -->
+  <div class="section-banner" style="margin-top: 18px;">
+    <div class="section-title">
+      <span>5. Decision Center</span>
+      <span class="route-pill">/decision-center</span>
+    </div>
+    <span class="role-badge role-amber">Comparative Decision Analysis</span>
+  </div>
+
+  <div class="goal-callout">
+    <strong>User Goal:</strong> Resolves final indecision when torn between 2 or 3 finalist anime.
+  </div>
+
+  <!-- Card 2: Side-by-Side Matrix (Amber Tint) -->
+  <div class="feature-card theme-amber">
+    <div class="card-header">
+      <span class="card-title">Multi-Criteria Decision Matrix</span>
+      <span class="type-tag tag-dec">Multi-Criteria Decision Analysis (MCDA)</span>
+    </div>
+    <ul class="points">
+      <li><strong>What it does:</strong> Places up to 3 selected anime side-by-side in a comparative matrix.</li>
+      <li><strong>Trade-Off Factors Compared:</strong> Total episodes, hours to complete, community review counts, 5-star vs 1-star ratios, and genre overlap.</li>
+      <li><strong>Decision Benefit:</strong> Eliminates tab clutter and mental overload by presenting all trade-offs on one screen.</li>
+    </ul>
   </div>
 
   <div class="footer">
-    <div>ANIVIBE Architectural Guide — Assumption University CSX/ITX 4207</div>
+    <div>ANIVIBE Architectural Guide — Assumption University</div>
     <div>Page 3 of 4</div>
   </div>
 
   <div class="page-break"></div>
 
-  <!-- ==================== SHEET 4: BENCHMARKS, SUMMARY & DEFENSE ==================== -->
+  <!-- ==================== SHEET 4: BENCHMARKS & SUMMARY ==================== -->
 
-  <!-- PAGE 6: ACADEMIC BENCHMARKS PAGE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Page 6: Academic Benchmarks Page</span>
-        <span class="route-pill">/benchmarks</span>
-      </div>
-      <div>
-        <span class="badge badge-decision">Empirical Model Evaluation</span>
-      </div>
+  <!-- SECTION 6: ACADEMIC BENCHMARKS -->
+  <div class="section-banner">
+    <div class="section-title">
+      <span>6. Academic Benchmarks Page</span>
+      <span class="route-pill">/benchmarks</span>
     </div>
-    <div class="user-purpose">
-      <strong>User Goal:</strong> Provides instructors and evaluators with scientific proof of how each recommender paradigm performs.
-    </div>
-
-    <div class="system-item">
-      <p>
-        <strong>What it does:</strong> Displays benchmark metrics comparing all four approaches:
-      </p>
-      <ul>
-        <li><strong>Precision:</strong> How accurately the recommendations match user test profiles.</li>
-        <li><strong>Recall:</strong> The percentage of relevant titles captured in the top recommendations.</li>
-        <li><strong>Diversity:</strong> Whether the model offers diverse variety or repeats the same narrow genres.</li>
-        <li><strong>Coverage:</strong> The percentage of the 1,255-title catalog the model can reach.</li>
-      </ul>
-      <p>
-        <strong>Key Finding:</strong> Demonstrates that the <strong>1+1 Hybrid</strong> achieves the highest precision while maintaining healthy diversity, proving why hybrid architectures are superior.
-      </p>
-    </div>
+    <span class="role-badge role-blue">Model Evaluation</span>
   </div>
 
-  <!-- SUMMARY TABLE -->
-  <div class="page-card">
-    <div class="page-title-row">
-      <div class="page-title">
-        <span>Summary: Architecture At A Glance</span>
-      </div>
+  <div class="goal-callout">
+    <strong>User Goal:</strong> Provides instructors and evaluators with empirical proof of model performance.
+  </div>
+
+  <!-- Card 1: Benchmark Dashboard (Sky Tint) -->
+  <div class="feature-card theme-sky">
+    <div class="card-header">
+      <span class="card-title">Empirical Benchmark Evaluation</span>
+      <span class="type-tag tag-dec">Scientific Validation</span>
+    </div>
+    <ul class="points">
+      <li><strong>Metrics Evaluated:</strong> Precision (accuracy of matches), Recall (catalog relevance), Diversity (genre variety), and Coverage (% of catalog reachable).</li>
+      <li><strong>Academic Finding:</strong> Proves the <strong>1+1 Hybrid</strong> achieves superior precision while maintaining balanced diversity, validating the hybrid design.</li>
+    </ul>
+  </div>
+
+  <!-- SUMMARY TABLE (Alternating Rows) -->
+  <div style="margin-top: 14px;">
+    <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+      Architecture At A Glance
     </div>
     <table class="summary-table">
       <thead>
         <tr>
-          <th>Page Name</th>
+          <th>Page</th>
           <th>Recommender System</th>
-          <th>Decision Support Feature</th>
-          <th>User Benefit</th>
+          <th>Decision Support Tool</th>
+          <th>Key Value</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>1. Home</strong></td>
-          <td>Popularity Baseline + Personalized CBF</td>
-          <td>Cold-Start Onboarding Prompt</td>
-          <td>Safe start for new users; tailored feed as you rate</td>
+          <td>Popularity + Personalized CBF</td>
+          <td>Cold-Start Decision Banner</td>
+          <td>Immediate start; personal feed as you rate</td>
         </tr>
         <tr>
           <td><strong>2. Anime Detail</strong></td>
           <td>Item-to-Item Similarity</td>
-          <td>5-Star Rating Histogram</td>
-          <td>Spot controversial vs loved titles; find sister anime</td>
+          <td>Rating Histogram & Badges</td>
+          <td>Spot controversial vs loved titles</td>
         </tr>
         <tr>
           <td><strong>3. Browse & Find</strong></td>
-          <td>Knowledge-Based Recommender (KBR)</td>
-          <td>Rule Checklist & Multi-Attribute Search</td>
-          <td>Filter by exact episode limits, minimum score, and mood</td>
+          <td>Knowledge-Based Recommender</td>
+          <td>Rule Checklist & Filters</td>
+          <td>Match strict episode budget & mood</td>
         </tr>
         <tr>
           <td><strong>4. Smart Match</strong></td>
-          <td>1+1 Hybrid (50% CBF + 50% KBR)</td>
-          <td>Dual Taste vs Fit Percentage Badges</td>
-          <td>Recommends what you love AND have time to watch</td>
+          <td>1+1 Hybrid (CBF + KBR)</td>
+          <td>Dual Taste vs Fit Match Badges</td>
+          <td>Picks what you love AND have time to watch</td>
         </tr>
         <tr>
           <td><strong>5. Decision Center</strong></td>
           <td>Comparative Candidate Ranking</td>
-          <td>Side-by-Side Multi-Criteria Matrix</td>
-          <td>Resolve indecision between 2 or 3 finalist titles</td>
+          <td>Side-by-Side Trade-off Matrix</td>
+          <td>Resolve dilemmas between finalist shows</td>
         </tr>
         <tr>
           <td><strong>6. Benchmarks</strong></td>
-          <td>Cross-Model Empirical Comparison</td>
-          <td>Precision, Recall, Diversity Metrics</td>
-          <td>Scientific validation for academic grading and defense</td>
+          <td>Cross-Model Evaluation</td>
+          <td>Precision, Recall, Diversity Table</td>
+          <td>Objective proof for grading & defense</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- DEFENSE BOX -->
-  <div class="defense-box">
-    <strong>Project Defense Summary for Evaluators:</strong>
-    ANIVIBE demonstrates that a modern recommendation platform cannot rely on a single technique. Popularity solves Cold-Start, Content-Based Filtering models personal taste, Knowledge-Based rules satisfy real-world time budgets, and the 1+1 Hybrid fuses them into an optimal decision support system.
+  <!-- Defense Summary Box -->
+  <div class="defense-card">
+    <div class="defense-title">Academic Defense Summary for Evaluators</div>
+    <p>
+      ANIVIBE demonstrates that a complete Decision Support and Recommendation System cannot rely on one paradigm alone.
+      <strong>Popularity</strong> solves Cold-Start, <strong>Content-Based Filtering</strong> captures authentic taste,
+      <strong>Knowledge-Based rules</strong> respect real-world time budgets, and the <strong>1+1 Hybrid</strong>
+      unifies them into a transparent, optimal decision support platform.
+    </p>
   </div>
 
   <div class="footer">
-    <div>ANIVIBE Architectural Guide — Assumption University CSX/ITX 4207</div>
+    <div>ANIVIBE Architectural Guide — Assumption University</div>
     <div>Page 4 of 4</div>
   </div>
 
@@ -626,7 +589,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 """
 
 def generate_pdf():
-    html_path = "/tmp/anivibe_guide.html"
+    html_path = "/tmp/anivibe_guide_v2.html"
     pdf_path = os.path.abspath("docs/ANIVIBE_Decision_and_Recommender_Systems_Guide.pdf")
 
     with open(html_path, "w", encoding="utf-8") as f:
