@@ -9,7 +9,7 @@
 ## 🌐 Live System Links
 - **Interactive Web Application**: [https://minkhanttin-anivibe.static.hf.space](https://minkhanttin-anivibe.static.hf.space)
 - **Hugging Face Space**: [https://huggingface.co/spaces/minkhanttin/anivibe](https://huggingface.co/spaces/minkhanttin/anivibe)
-- **Page-by-Page Architectural Guide (PDF)**: [docs/ANIVIBE_Decision_and_Recommender_Systems_Guide.pdf](docs/ANIVIBE_Decision_and_Recommender_Systems_Guide.pdf)
+- **Course Presentation (PPTX)**: [ANIVIBE_Presentation.pptx](ANIVIBE_Presentation.pptx)
 
 ---
 
