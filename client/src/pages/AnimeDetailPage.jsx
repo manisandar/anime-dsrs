@@ -14,8 +14,6 @@ export default function AnimeDetailPage({
   const [anime, setAnime] = useState(initialAnime);
   const [similarAnime, setSimilarAnime] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
-  const [personalizedAnime, setPersonalizedAnime] = useState([]);
-  const [loadingPersonalized, setLoadingPersonalized] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [ratedSuccess, setRatedSuccess] = useState(false);
 
@@ -54,7 +52,7 @@ export default function AnimeDetailPage({
     let isMounted = true;
     setLoadingSimilar(true);
 
-    api.getSimilarAnime(anime.anime_id, 8)
+    api.getSimilarAnime(anime.anime_id, 16)
       .then((data) => {
         const items = data?.similar || data?.data?.similar || (Array.isArray(data?.data) ? data.data : []);
         if (isMounted && Array.isArray(items)) {
@@ -69,37 +67,7 @@ export default function AnimeDetailPage({
     return () => { isMounted = false; };
   }, [anime?.anime_id]);
 
-  // Fetch Personalized CBF: "Recommended For You" if ratings exist
-  useEffect(() => {
-    if (sessionRatings.length === 0) {
-      setPersonalizedAnime([]);
-      return;
-    }
-
-    let isMounted = true;
-    setLoadingPersonalized(true);
-
-    api.getPersonalizedCBF({ sessionRatings, topK: 6 })
-      .then((res) => {
-        if (isMounted && res.success && res.data) {
-          // Filter out current anime from personalized list if present
-          const filtered = (res.data.recommendations || []).filter(
-            (item) => item.anime_id !== anime?.anime_id
-          );
-          setPersonalizedAnime(filtered);
-        }
-      })
-      .catch((err) => console.warn('Failed to fetch personalized CBF:', err))
-      .finally(() => {
-        if (isMounted) setLoadingPersonalized(false);
-      });
-
-    return () => { isMounted = false; };
-  }, [anime?.anime_id, sessionRatings]);
-
   if (!anime) return null;
-
-  const matchPercentage = anime.match_percentage || (anime.rate ? Math.round((anime.rate / 5) * 100) : 85);
 
   const handleRate = async (stars) => {
     setUserRating(stars);
@@ -170,12 +138,11 @@ export default function AnimeDetailPage({
           {/* Metadata & Actions */}
           <div className="detail-info-pane">
             <div className="detail-badges-row">
-              <span className="match-pill">
-                <Sparkles size={12} />
-                <span>{matchPercentage}% Match</span>
-              </span>
               <span className="meta-pill">{anime.episodes} Episodes</span>
               <span className="meta-pill">TV Series</span>
+              {anime.rate && (
+                <span className="meta-pill">★ {anime.rate} Rating</span>
+              )}
             </div>
 
             <h1 className="detail-title">{anime.title}</h1>
@@ -237,44 +204,6 @@ export default function AnimeDetailPage({
                 )}
               </div>
             </div>
-
-            {/* Dual score breakdown if present */}
-            {anime.cbf_match_pct !== undefined && anime.kbr_match_pct !== undefined && (
-              <div className="match-reason-card">
-                <div className="reason-header">
-                  <Sparkles size={14} />
-                  <span>Smart Match Component Breakdown</span>
-                </div>
-
-                <div className="breakdown-bars-grid">
-                  <div className="bar-group">
-                    <div className="bar-label">
-                      <span>Personal Taste (Content-Based)</span>
-                      <span>{anime.cbf_match_pct}%</span>
-                    </div>
-                    <div className="progress-track">
-                      <div
-                        className="progress-fill fill-cb"
-                        style={{ width: `${anime.cbf_match_pct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bar-group">
-                    <div className="bar-label">
-                      <span>Requirement Fit (Knowledge-Based)</span>
-                      <span>{anime.kbr_match_pct}%</span>
-                    </div>
-                    <div className="progress-track">
-                      <div
-                        className="progress-fill fill-kb"
-                        style={{ width: `${anime.kbr_match_pct}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -308,7 +237,7 @@ export default function AnimeDetailPage({
       </div>
 
       {/* ============================================================ */}
-      {/* SECTION 1: MORE LIKE THIS (NETFLIX-STYLE ROW WITH ARROWS)   */}
+      {/* MORE LIKE THIS (NETFLIX-STYLE ROW WITH ARROWS: PURE CBF)    */}
       {/* ============================================================ */}
       <NetflixRow
         title="More Like This"
@@ -321,23 +250,6 @@ export default function AnimeDetailPage({
         sessionRatings={sessionRatings}
         emptyMessage="No closely matching titles found in the catalog."
       />
-
-      {/* ============================================================ */}
-      {/* SECTION 2: RECOMMENDED FOR YOU (NETFLIX-STYLE ROW WITH ARROWS) */}
-      {/* ============================================================ */}
-      {sessionRatings.length > 0 && (
-        <NetflixRow
-          title="Recommended For You"
-          categoryLabel="Content-Based Filtering (Reference Anime Match)"
-          subtitle={`Top-N recommendations matching your active reference anime.`}
-          items={personalizedAnime}
-          loading={loadingPersonalized}
-          onSelectAnime={onSelectAnime}
-          onRate={onRate}
-          sessionRatings={sessionRatings}
-          emptyMessage="Rate more titles to expand your personalized recommendation row."
-        />
-      )}
     </div>
   );
 }

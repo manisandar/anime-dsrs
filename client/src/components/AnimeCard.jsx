@@ -1,28 +1,20 @@
 import React, { useState } from 'react';
-import { Star, Tv, Sparkles, ExternalLink, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import { Star, Tv, ExternalLink } from 'lucide-react';
 
 export default function AnimeCard({
   anime,
   onClick,
   onRate,
   userRating = 0,
-  showAttribution = true,
-  showRules = false
+  showAttribution = false,
+  showMatchBadge = false
 }) {
   const [imgError, setImgError] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
-  const [rulesOpen, setRulesOpen] = useState(false);
-
-  const matchPercentage = anime.match_percentage || (anime.rate ? Math.round((anime.rate / 5) * 100) : null);
 
   const handleCardClick = (e) => {
-    // Avoid triggering card navigation when rating or clicking external link or expanding rules
-    if (
-      e.target.closest('.star-btn') ||
-      e.target.closest('.ext-link') ||
-      e.target.closest('.rules-toggle-btn') ||
-      e.target.closest('.rules-accordion-body')
-    ) {
+    // Avoid triggering card navigation when rating or clicking external link
+    if (e.target.closest('.star-btn') || e.target.closest('.ext-link')) {
       return;
     }
     if (onClick) onClick(anime);
@@ -50,17 +42,6 @@ export default function AnimeCard({
           </div>
         )}
 
-        {anime.similarity !== undefined ? (
-          <div className="card-match-badge card-similarity-badge" title={`Cosine Similarity: ${anime.similarity}`}>
-            <Sparkles size={11} />
-            <span>Sim: {anime.similarity}</span>
-          </div>
-        ) : matchPercentage ? (
-          <div className="card-match-badge" title="Algorithm Match Score">
-            <Sparkles size={11} />
-            <span>{matchPercentage}% Match</span>
-          </div>
-        ) : null}
       </div>
 
       <div className="card-content">
@@ -94,51 +75,6 @@ export default function AnimeCard({
           )}
         </div>
 
-        {/* Dual Scores for 1+1 Hybrid */}
-        {anime.cbf_match_pct !== undefined && anime.kbr_match_pct !== undefined && (
-          <div className="dual-scores-pill">
-            <span className="dual-taste">Taste {anime.cbf_match_pct}%</span>
-            <span className="dual-sep">•</span>
-            <span className="dual-fit">Fit {anime.kbr_match_pct}%</span>
-          </div>
-        )}
-
-        {/* Expandable "Why does this match?" for KBR and Hybrid */}
-        {anime.rule_evaluations && anime.rule_evaluations.length > 0 && (
-          <div className="rules-accordion-container">
-            <button
-              type="button"
-              className="rules-toggle-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setRulesOpen((prev) => !prev);
-              }}
-            >
-              <span>Why does this match?</span>
-              {rulesOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
-
-            {rulesOpen && (
-              <div className="rules-accordion-body" onClick={(e) => e.stopPropagation()}>
-                <div className="rules-list">
-                  {anime.rule_evaluations.map((r, idx) => (
-                    <div key={idx} className={`rule-item ${r.passed ? 'rule-passed' : 'rule-failed'}`}>
-                      <div className="rule-item-header">
-                        {r.passed ? <Check size={11} className="rule-icon-pass" /> : <X size={11} className="rule-icon-fail" />}
-                        <span className="rule-name">{r.rule}</span>
-                        <span className="rule-status-badge">{r.passed ? 'PASS' : 'FAIL'}</span>
-                      </div>
-                      <div className="rule-details">
-                        <span className="rule-target">Target: {r.target}</span>
-                        <span className="rule-actual">Result: {r.actual}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Bottom Bar: Interactive Rating & Crunchyroll link */}
         <div className="card-footer-row">

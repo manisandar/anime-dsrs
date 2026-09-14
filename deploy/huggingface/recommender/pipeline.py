@@ -22,101 +22,69 @@ from typing import List, Dict, Any, Optional, Tuple
 try:
     from recommender.algorithms import (
         cosine_similarity,
-        calculate_bayesian_rating,
-        build_user_content_profile,
+        recommend_popular,
+        get_reference_content_vector,
+        build_multi_anime_user_profile,
         evaluate_kbr_rules,
         recommend_content_similar
     )
+    from recommender.cbf import ContentBasedRecommender
 except ModuleNotFoundError:
     from algorithms import (
         cosine_similarity,
-        calculate_bayesian_rating,
-        build_user_content_profile,
+        recommend_popular,
+        get_reference_content_vector,
+        build_multi_anime_user_profile,
         evaluate_kbr_rules,
         recommend_content_similar
     )
+    from cbf import ContentBasedRecommender
 
 class RecommenderPipeline:
     def __init__(self, catalog_path: str):
         self.catalog_path = catalog_path
         self.catalog = []
         self.catalog_map = {}
+        self.cbf = None
         self.load_data()
 
     def load_data(self):
         with open(self.catalog_path, "r", encoding="utf-8") as f:
             self.catalog = json.load(f)
             self.catalog_map = {item["anime_id"]: item for item in self.catalog}
-        print(f"[RecommenderPipeline] Loaded {len(self.catalog)} anime records.")
+        self.cbf = ContentBasedRecommender(self.catalog)
+        print(f"[RecommenderPipeline] Loaded {len(self.catalog)} anime records; CBF initialized with {len(self.cbf.vocabulary)} genres.")
 
     # ----------------------------------------------------------------------
-    # 1. POPULARITY-BASED RECOMMENDATION
+    # 1. POPULARITY-BASED RECOMMENDATION: Highest Average Rating from Highest Votes
     # ----------------------------------------------------------------------
-    def get_popular(self, top_k: int = 12) -> List[Dict[str, Any]]:
+    def get_popular(self, top_k: int = 12, pool_size: int = 100) -> List[Dict[str, Any]]:
         """
-        Global consensus recommendations based on Bayesian weighted ratings.
-        Always available independently; acts as cold-start on Home page.
+        Global consensus recommendations based on highest average rating from highest votes.
+        No Bayesian smoothing.
+        1. Selects candidate pool of highest-voted anime across the catalog.
+        2. Sorts by highest average rating (rate descending), tie-breaking by total votes.
         """
-        scored = []
-        for anime in self.catalog:
-            bayes = calculate_bayesian_rating(anime["rate"], anime["votes"])
-            scored.append({
-                "anime_id": anime["anime_id"],
-                "title": anime["title"],
-                "anime_url": anime["anime_url"],
-                "anime_img": anime["anime_img"],
-                "episodes": anime["episodes"],
-                "votes": anime["votes"],
-                "rate": anime["rate"],
-                "rate_1": anime.get("rate_1", 0),
-                "rate_2": anime.get("rate_2", 0),
-                "rate_3": anime.get("rate_3", 0),
-                "rate_4": anime.get("rate_4", 0),
-                "rate_5": anime.get("rate_5", 0),
-                "genres": anime["genres"],
-                "bayesian_score": round(bayes, 3),
-                "match_percentage": min(99, int(round((bayes / 5.0) * 100)))
-            })
-        scored.sort(key=lambda x: x["bayesian_score"], reverse=True)
-        return scored[:top_k]
+        return recommend_popular(self.catalog, pool_size=pool_size, top_n=top_k)
 
     # ----------------------------------------------------------------------
     # 2. CONTENT-BASED FILTERING (ITEM-TO-ITEM): "More Like This"
     # ----------------------------------------------------------------------
     def get_item_similar(self, anime_id: int, top_k: int = 8) -> Dict[str, Any]:
         """
-        Item-to-Item CBF for Anime Detail page.
-        Compares target anime's 29-genre vector with other catalog anime.
-        Independent of user rating history.
+        Item-to-Item CBF for Anime Detail page using CountVectorizer + Cosine Similarity.
+        Compares target anime's genre count vector with all other catalog anime.
+        Excludes the target anime itself.
         """
         target = self.catalog_map.get(anime_id)
         if not target:
             return {"error": "Anime not found", "similar": []}
 
-        similar_tuples = recommend_content_similar(target, self.catalog, top_n=top_k)
-        formatted = []
-        for item, sim in similar_tuples:
-            formatted.append({
-                "anime_id": item["anime_id"],
-                "title": item["title"],
-                "anime_url": item["anime_url"],
-                "anime_img": item["anime_img"],
-                "episodes": item["episodes"],
-                "votes": item["votes"],
-                "rate": item["rate"],
-                "rate_1": item.get("rate_1", 0),
-                "rate_2": item.get("rate_2", 0),
-                "rate_3": item.get("rate_3", 0),
-                "rate_4": item.get("rate_4", 0),
-                "rate_5": item.get("rate_5", 0),
-                "genres": item["genres"],
-                "similarity": round(sim, 3),
-                "match_percentage": min(99, int(round(sim * 100)))
-            })
+        similar = self.cbf.recommend(anime_id, top_n=top_k)
         return {
             "target": target["title"],
             "target_id": anime_id,
-            "similar": formatted
+            "similar": similar
         }
 
     # ----------------------------------------------------------------------
@@ -128,62 +96,45 @@ class RecommenderPipeline:
         top_k: int = 12
     ) -> Dict[str, Any]:
         """
-        Personalized CBF using user's active session ratings.
-        Constructs a weighted user preference profile.
+        Personalized CBF using user-selected/rated reference anime.
+        The user's latest selected/rated anime acts as the reference item.
+        Ratings are NOT mathematically weighted (Rating - 3.0 is prohibited).
         """
         if not session_ratings:
             return {
                 "has_profile": False,
-                "message": "No session ratings provided yet.",
+                "message": "No reference anime selected or rated yet. Rate or select an anime to generate Content-Based recommendations.",
+                "reference_anime": None,
                 "preferred_genres": {},
                 "recommendations": []
             }
 
-        profile_vec, preferred_genres = build_user_content_profile(session_ratings, self.catalog_map)
-        
-        # Check if profile vector has non-zero magnitude
-        if sum(profile_vec) <= 0.0:
+        ref_id = int(session_ratings[-1]["anime_id"])
+        ref_anime = self.catalog_map.get(ref_id)
+        if not ref_anime:
             return {
                 "has_profile": False,
-                "message": "Ratings were neutral or canceled out.",
+                "message": f"Reference anime #{ref_id} not found in catalog.",
+                "reference_anime": None,
                 "preferred_genres": {},
                 "recommendations": []
             }
 
-        rated_ids = {r["anime_id"] for r in session_ratings}
-        scored = []
-
-        for anime in self.catalog:
-            if anime["anime_id"] in rated_ids:
-                continue  # Skip already rated titles in recommendation feed
-
-            sim = cosine_similarity(profile_vec, anime["genre_vector"])
-            if sim > 0.0:
-                scored.append({
-                    "anime_id": anime["anime_id"],
-                    "title": anime["title"],
-                    "anime_url": anime["anime_url"],
-                    "anime_img": anime["anime_img"],
-                    "episodes": anime["episodes"],
-                    "votes": anime["votes"],
-                    "rate": anime["rate"],
-                    "rate_1": anime.get("rate_1", 0),
-                    "rate_2": anime.get("rate_2", 0),
-                    "rate_3": anime.get("rate_3", 0),
-                    "rate_4": anime.get("rate_4", 0),
-                    "rate_5": anime.get("rate_5", 0),
-                    "genres": anime["genres"],
-                    "cbf_score": round(sim, 4),
-                    "match_percentage": min(99, max(10, int(round(sim * 100))))
-                })
-
-        scored.sort(key=lambda x: x["cbf_score"], reverse=True)
+        recommendations = self.cbf.recommend(ref_id, top_n=top_k)
+        preferred_genres = {g: 1.0 for g in ref_anime.get("genres", [])}
 
         return {
             "has_profile": True,
+            "reference_anime": {
+                "anime_id": ref_anime["anime_id"],
+                "title": ref_anime["title"],
+                "genres": ref_anime.get("genres", []),
+                "rate": ref_anime.get("rate", 0),
+                "anime_img": ref_anime.get("anime_img", "")
+            },
             "ratings_count": len(session_ratings),
             "preferred_genres": preferred_genres,
-            "recommendations": scored[:top_k]
+            "recommendations": recommendations
         }
 
     # ----------------------------------------------------------------------
@@ -258,26 +209,27 @@ class RecommenderPipeline:
                 "recommendations": []
             }
 
-        profile_vec, preferred_genres = build_user_content_profile(session_ratings, self.catalog_map)
-        has_valid_cbf = (sum(profile_vec) > 0.0)
+        # Construct unified user content profile from ALL rated anime
+        user_profile_vec, genre_counts = build_multi_anime_user_profile(session_ratings, self.catalog_map)
+        has_profile = any(x > 0.0 for x in user_profile_vec)
 
         rated_ids = {r["anime_id"] for r in session_ratings}
         candidates = []
 
         for anime in self.catalog:
-            # 1. Evaluate Knowledge-Based Rules
+            # 1. Evaluate Knowledge-Based Rules (70% weight)
             passed, rules, kbr_score = evaluate_kbr_rules(anime, constraints, mood)
             if not passed:
                 continue
 
-            # 2. Evaluate Content-Based Taste Score
-            if has_valid_cbf:
-                cbf_score = cosine_similarity(profile_vec, anime["genre_vector"])
+            # 2. Evaluate Content-Based Taste Score using Cosine Similarity to User Profile Vector (30% weight)
+            if has_profile:
+                cbf_score = cosine_similarity(user_profile_vec, anime["genre_vector"])
             else:
                 cbf_score = 0.50
 
-            # 3. 1+1 Hybrid Fusion (50% CBF + 50% KBR)
-            hybrid_score = round(0.50 * cbf_score + 0.50 * kbr_score, 4)
+            # 3. 70/30 Hybrid Fusion (70% KBR + 30% CBR)
+            hybrid_score = round(0.70 * kbr_score + 0.30 * cbf_score, 4)
 
             candidates.append({
                 "anime_id": anime["anime_id"],
@@ -307,7 +259,12 @@ class RecommenderPipeline:
         return {
             "cold_start": False,
             "ratings_count": len(session_ratings),
-            "preferred_genres": preferred_genres,
+            "genre_counts": genre_counts,
+            "preferred_genres": genre_counts,
             "total_matches": len(candidates),
             "recommendations": candidates[:top_k]
         }
+
+# Alias for backward compatibility
+RecommendationPipeline = RecommenderPipeline
+

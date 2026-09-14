@@ -39,15 +39,6 @@ export default function Navbar({
           <Compass size={15} />
           <span>Browse & Find</span>
         </button>
-
-        <button
-          className={`nav-btn ${activeTab === 'smart_match' ? 'active' : ''}`}
-          onClick={() => setActiveTab('smart_match')}
-          id="nav-btn-smart-match"
-        >
-          <Sliders size={15} />
-          <span>Smart Match</span>
-        </button>
       </nav>
 
       <div className="nav-actions">

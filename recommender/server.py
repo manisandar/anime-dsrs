@@ -4,10 +4,10 @@ CSX/ITX 4207: Decision Support and Recommendation System, Assumption University.
 
 REST Endpoints:
 - GET  /health           : Microservice health check and paradigm metadata
-- GET  /popular          : Popularity-Based Recommendations (Bayesian weighted)
+- GET  /popular          : Popularity-Based Recommendations (Highest average rating from highest votes)
 - POST /recommend/cbf    : Personalized Content-Based Filtering (Session ratings)
 - POST /recommend/kbr    : Knowledge-Based Recommendations (Constraints & Rules)
-- POST /recommend/hybrid : 1+1 Hybrid Recommendations (Smart Match)
+- POST /recommend/hybrid : 70/40 Hybrid Recommendations (KBR + CBR Multi-Anime)
 - POST /similar          : Item-to-Item Content-Based Filtering ("More Like This")
 """
 
@@ -44,7 +44,7 @@ class RecommenderHandler(BaseHTTPRequestHandler):
                 "status": "healthy",
                 "service": "anivibe-recommender-engine",
                 "paradigms": {
-                    "popularity": "Bayesian consensus ranking",
+                    "popularity": "Highest average rating from highest votes consensus",
                     "cbf_item": "Item-to-Item Cosine Similarity on 29 Genres",
                     "cbf_user": "Personalized Taste Profile from Session Ratings",
                     "kbr": "Constraint Satisfaction & Domain Rules Reasoning",

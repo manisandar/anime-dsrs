@@ -342,7 +342,7 @@ def main():
         (x_left, y_row1, "1. Popularity Baseline", "Consensus Ranking", "Uses Bayesian smoothing to rank globally loved anime. Serves as the cold-start baseline for new visitors with 0 ratings.", ACCENT_AMBER),
         (x_right, y_row1, "2. Content-Based Filtering", "Genre Vector Space Model", "Calculates cosine similarity across 29 genres. Powers 'More Like This' and builds user taste vectors from active ratings.", ACCENT_PURPLE),
         (x_left, y_row2, "3. Knowledge-Based Recommendation", "Constraint Satisfaction & Rules", "Filters candidate anime using hard limits (episodes, rating) and soft domain rules (viewing mood) with clear explanations.", ACCENT_CYAN),
-        (x_right, y_row2, "4. 1+1 Hybrid Fusion", "Smart Match Engine", "Equally combines 50% User Taste with 50% Situational Fit. Solves overspecialization and provides personalized results.", ACCENT_GREEN)
+        (x_right, y_row2, "4. 70/40 Hybrid Fusion", "Find What Fits Engine", "Combines 70% Situational Fit (KBR) with 40% Multi-Anime Taste Profile (CBR). Solves overspecialization and provides personalized results.", ACCENT_GREEN)
     ]
 
     for x, y, title, subtitle, desc, col in paradigms:
@@ -729,11 +729,11 @@ def main():
         p.space_after = Pt(10)
 
     # ==========================================================================
-    # SLIDE 11: PARADIGM 4 — 1+1 HYBRID FUSION (SMART MATCH)
+    # SLIDE 11: PARADIGM 4 — 70/40 HYBRID FUSION (FIND WHAT FITS)
     # ==========================================================================
     s11 = prs.slides.add_slide(blank_layout)
     set_slide_background(s11, prs)
-    add_header(s11, "Recommendation Paradigm 4A", "1+1 Hybrid Fusion ('Smart Match')", "Balancing personal taste with situational constraints in a unified mathematical model.")
+    add_header(s11, "Recommendation Paradigm 4A", "70/40 Hybrid Fusion ('Find What Fits')", "Balancing multi-anime taste profile with situational constraints in a unified mathematical model.")
 
     add_card(s11, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_INDIGO)
     tb = s11.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
@@ -748,16 +748,16 @@ def main():
     p.space_after = Pt(14)
 
     p = tf.add_paragraph()
-    p.text = "Score_Hybrid = 0.50 × S_CBF + 0.50 × S_KBR"
+    p.text = "Score_Hybrid = 0.70 × S_KBR + 0.40 × S_CBR"
     p.font.size = Pt(20)
     p.font.bold = True
     p.font.color.rgb = ACCENT_CYAN
     p.space_after = Pt(16)
 
     hybrid_bullets = [
-        "50% User Taste (S_CBF): Cosine similarity between candidate anime and the user's rated genre profile.",
-        "50% Requirement Fit (S_KBR): Continuous utility score reflecting episode fit, score bonus, and mood overlap.",
-        "Multi-Dimensional Scoring: Displays both individual match percentages (Taste % and Constraint %) alongside overall Hybrid Match %."
+        "70% Requirement Fit (S_KBR): Continuous utility score evaluating episode commitment, minimum rating threshold, and must-include genres.",
+        "40% Multi-Anime Taste Profile (S_CBR): Constructs a single user content profile vector U_profile = ∑ v_i across ALL rated anime, compared via Cosine Similarity with every candidate anime.",
+        "Multi-Dimensional Scoring: Displays both individual match percentages (Taste % and Fit %) alongside the combined Hybrid Match %."
     ]
     for b in hybrid_bullets:
         p = tf.add_paragraph()
@@ -766,7 +766,7 @@ def main():
         p.font.color.rgb = TEXT_LIGHT
         p.space_after = Pt(12)
 
-    # Right: Why 50/50 Works
+    # Right: Why 70/40 Works
     add_card(s11, Inches(6.883), top_y, col_w, card_h)
     tb = s11.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
     tf = tb.text_frame
@@ -780,9 +780,9 @@ def main():
     p.space_after = Pt(16)
 
     reasons = [
-        "Taste Alone is Incomplete: A show may match your taste 100%, but if it has 500 episodes when you only have tonight, it is useless.",
-        "Constraints Alone Lack Flavor: A filter alone might find a 12-episode show with 4.5★, but in a genre you completely dislike.",
-        "The Synergy: The 1+1 Hybrid guarantees that every top recommendation is both genuinely loved AND realistically watchable right now."
+        "Taste Profile (40%): Aggregates genres across ALL user-rated anime so the system understands overall taste, rather than comparing against only one single anime.",
+        "Situational Constraints (70%): Prevents recommending a 500-episode series when you only have time for a short series, or low-rated titles.",
+        "The Synergy: The 70/40 Hybrid guarantees that every top recommendation satisfies your current situation while matching your accumulated taste."
     ]
     for r in reasons:
         p = tf.add_paragraph()

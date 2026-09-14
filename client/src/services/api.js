@@ -16,12 +16,17 @@ const getApiBase = () => {
   return '/api';
 };
 
+let isOfflineMode = false;
+
 // Helper: Try remote network request with timeout, seamlessly fall back to local client engine if offline/unavailable
 async function tryRemoteOrLocal(remoteFn, localFn) {
+  if (isOfflineMode) {
+    return await localFn();
+  }
   try {
     return await remoteFn();
   } catch (err) {
-    // Only log if not in silent mode
+    isOfflineMode = true;
     return await localFn();
   }
 }
@@ -181,8 +186,8 @@ export const api = {
     );
   },
 
-  // 8. 1+1 Hybrid Recommendation: "Smart Match"
-  async getHybridRecommendations({ sessionRatings = [], constraints = {}, mood = null, topK = 18 }) {
+  // 8. 70/40 Hybrid Recommendation: Combined KBR & Multi-Anime User Taste Profile
+  async getHybridRecommendations({ sessionRatings = [], constraints = {}, mood = null, search = '', genre = '', sortBy = 'hybrid', page = 1, limit = 18, topK = 18 } = {}) {
     return tryRemoteOrLocal(
       async () => {
         const ctrl = new AbortController();
@@ -194,6 +199,11 @@ export const api = {
             session_ratings: sessionRatings,
             constraints,
             mood,
+            search,
+            genre,
+            sort_by: sortBy,
+            page,
+            limit,
             top_k: topK,
           }),
           signal: ctrl.signal
@@ -202,7 +212,7 @@ export const api = {
         if (!res.ok) throw new Error('Hybrid recommendation request failed');
         return res.json();
       },
-      () => localEngine.getHybridRecommendations({ sessionRatings, constraints, mood, topK })
+      () => localEngine.getHybridRecommendations({ sessionRatings, constraints, mood, search, genre, sortBy, page, limit, topK })
     );
   },
 

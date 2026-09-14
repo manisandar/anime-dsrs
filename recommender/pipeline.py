@@ -3,7 +3,7 @@ ANIVIBE 4-Paradigm Recommender Pipeline.
 CSX/ITX 4207: Decision Support and Recommendation System, Assumption University.
 
 Strictly separates:
-1. Popularity-Based Recommendation (Bayesian weighted rating)
+1. Popularity-Based Recommendation (Highest average rating from highest votes)
 2. Content-Based Filtering (CBF):
    - Item-to-Item ("More Like This" on Detail page)
    - Personalized User Profile ("Recommended For You" based on session ratings)
@@ -22,7 +22,7 @@ from typing import List, Dict, Any, Optional, Tuple
 try:
     from recommender.algorithms import (
         cosine_similarity,
-        calculate_bayesian_rating,
+        recommend_popular,
         get_reference_content_vector,
         evaluate_kbr_rules,
         recommend_content_similar
@@ -31,7 +31,7 @@ try:
 except ModuleNotFoundError:
     from algorithms import (
         cosine_similarity,
-        calculate_bayesian_rating,
+        recommend_popular,
         get_reference_content_vector,
         evaluate_kbr_rules,
         recommend_content_similar
@@ -54,35 +54,16 @@ class RecommenderPipeline:
         print(f"[RecommenderPipeline] Loaded {len(self.catalog)} anime records; CBF initialized with {len(self.cbf.vocabulary)} genres.")
 
     # ----------------------------------------------------------------------
-    # 1. POPULARITY-BASED RECOMMENDATION
+    # 1. POPULARITY-BASED RECOMMENDATION: Highest Average Rating from Highest Votes
     # ----------------------------------------------------------------------
-    def get_popular(self, top_k: int = 12) -> List[Dict[str, Any]]:
+    def get_popular(self, top_k: int = 12, pool_size: int = 100) -> List[Dict[str, Any]]:
         """
-        Global consensus recommendations based on Bayesian weighted ratings.
-        Always available independently; acts as cold-start on Home page.
+        Global consensus recommendations based on highest average rating from highest votes.
+        No Bayesian smoothing.
+        1. Selects candidate pool of highest-voted anime across the catalog.
+        2. Sorts by highest average rating (rate descending), tie-breaking by total votes.
         """
-        scored = []
-        for anime in self.catalog:
-            bayes = calculate_bayesian_rating(anime["rate"], anime["votes"])
-            scored.append({
-                "anime_id": anime["anime_id"],
-                "title": anime["title"],
-                "anime_url": anime["anime_url"],
-                "anime_img": anime["anime_img"],
-                "episodes": anime["episodes"],
-                "votes": anime["votes"],
-                "rate": anime["rate"],
-                "rate_1": anime.get("rate_1", 0),
-                "rate_2": anime.get("rate_2", 0),
-                "rate_3": anime.get("rate_3", 0),
-                "rate_4": anime.get("rate_4", 0),
-                "rate_5": anime.get("rate_5", 0),
-                "genres": anime["genres"],
-                "bayesian_score": round(bayes, 3),
-                "match_percentage": min(99, int(round((bayes / 5.0) * 100)))
-            })
-        scored.sort(key=lambda x: x["bayesian_score"], reverse=True)
-        return scored[:top_k]
+        return recommend_popular(self.catalog, pool_size=pool_size, top_n=top_k)
 
     # ----------------------------------------------------------------------
     # 2. CONTENT-BASED FILTERING (ITEM-TO-ITEM): "More Like This"
@@ -202,7 +183,7 @@ class RecommenderPipeline:
         }
 
     # ----------------------------------------------------------------------
-    # 5. 1+1 HYBRID RECOMMENDATION: "Smart Match" (CBF + KBR)
+    # 5. HYBRID RECOMMENDATION: 70% KBR + 40% CBR Multi-Anime User Profile
     # ----------------------------------------------------------------------
     def get_hybrid(
         self,
@@ -212,43 +193,39 @@ class RecommenderPipeline:
         top_k: int = 12
     ) -> Dict[str, Any]:
         """
-        1+1 Hybrid Recommendation combining:
-        - Taste Score from User Session Ratings (Content-Based Filtering)
-        - Requirement Fit Score from Current Situational Inputs (Knowledge-Based Recommendation)
-        Formula: Hybrid Score = 0.50 * CBF + 0.50 * KBR
+        70/40 Hybrid Recommendation combining:
+        - 70% Situation Fit Score from Knowledge-Based Rules (KBR)
+        - 40% User Taste Score from Single Aggregated Content Profile across ALL rated anime (CBF)
+        Formula: Hybrid Score = 0.70 * KBR + 0.40 * CBF
         """
-        # If user has 0 ratings, trigger cold-start state
-        if not session_ratings:
-            return {
-                "cold_start": True,
-                "message": "You have not rated any anime yet. Rate some anime to personalize Smart Match.",
-                "user_taste": None,
-                "recommendations": []
-            }
+        dim = 29
+        user_profile = [0.0] * dim
+        has_ratings = False
+        preferred_genres = {}
 
-        # Use user's latest rated anime as the reference item (without Rating - 3.0 weighting)
-        ref_id = int(session_ratings[-1]["anime_id"])
-        ref_anime = self.catalog_map.get(ref_id)
-        ref_vector = ref_anime.get("genre_vector") if ref_anime else None
-        preferred_genres = {g: 1.0 for g in ref_anime.get("genres", [])} if ref_anime else {}
+        if session_ratings:
+            for r in session_ratings:
+                anime = self.catalog_map.get(int(r["anime_id"]))
+                if anime and "genre_vector" in anime:
+                    has_ratings = True
+                    for i, val in enumerate(anime["genre_vector"][:dim]):
+                        user_profile[i] += val
+                    for g in anime.get("genres", []):
+                        preferred_genres[g] = preferred_genres.get(g, 0) + 1
 
-        rated_ids = {r["anime_id"] for r in session_ratings}
         candidates = []
-
         for anime in self.catalog:
-            # 1. Evaluate Knowledge-Based Rules
             passed, rules, kbr_score = evaluate_kbr_rules(anime, constraints, mood)
             if not passed:
                 continue
 
-            # 2. Evaluate Content-Based Taste Score using Cosine Similarity to Reference Anime
-            if ref_vector:
-                cbf_score = cosine_similarity(ref_vector, anime["genre_vector"])
+            if has_ratings:
+                cbf_score = cosine_similarity(user_profile, anime["genre_vector"])
             else:
-                cbf_score = 0.50
+                cbf_score = 0.0
 
-            # 3. 1+1 Hybrid Fusion (50% CBF + 50% KBR)
-            hybrid_score = round(0.50 * cbf_score + 0.50 * kbr_score, 4)
+            # 70/40 Hybrid Fusion
+            hybrid_score = round(0.70 * kbr_score + 0.40 * cbf_score, 4)
 
             candidates.append({
                 "anime_id": anime["anime_id"],
@@ -265,10 +242,10 @@ class RecommenderPipeline:
                 "rate_5": anime.get("rate_5", 0),
                 "genres": anime["genres"],
                 "hybrid_score": hybrid_score,
-                "match_percentage": min(99, max(15, int(round(hybrid_score * 100)))),
+                "match_percentage": min(99, max(15, int(round((hybrid_score / 1.10) * 100)))),
                 "cbf_score": round(cbf_score, 3),
                 "kbr_score": round(kbr_score, 3),
-                "cbf_match_pct": min(99, int(round(cbf_score * 100))),
+                "cbf_match_pct": min(99, int(round(cbf_score * 100))) if has_ratings else 0,
                 "kbr_match_pct": min(99, int(round(kbr_score * 100))),
                 "rule_evaluations": rules
             })
@@ -276,7 +253,8 @@ class RecommenderPipeline:
         candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
 
         return {
-            "cold_start": False,
+            "cold_start": not has_ratings,
+            "has_user_profile": has_ratings,
             "ratings_count": len(session_ratings),
             "preferred_genres": preferred_genres,
             "total_matches": len(candidates),

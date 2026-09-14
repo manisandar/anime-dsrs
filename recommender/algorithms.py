@@ -1,7 +1,7 @@
 """
 Pure Python Recommender System Core Algorithms for Anime-DSRS.
 Implements the core recommendation paradigms:
-- Popularity-Based Recommender (Wilson score / Bayesian average)
+- Popularity-Based Recommender (Highest average rating from highest votes consensus)
 - Content-Based Cosine Similarity (29-Genre Vector Space Model)
 - Latent Factor Matrix Factorization / Truncated SVD
 - User-Based & Item-Based Collaborative Filtering (k-NN)
@@ -38,38 +38,24 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return dot_product(v1, v2) / (norm1 * norm2)
 
 # ============================================================
-# POPULARITY-BASED RECOMMENDATION
+# POPULARITY-BASED RECOMMENDATION: Highest Average Rating from Highest Votes
 # ============================================================
-
-def calculate_bayesian_rating(rate: float, votes: int, global_mean: float = 3.65, min_votes: int = 100) -> float:
-    """
-    Weighted Bayesian rating to prevent anime with 1 review of 5.0 outranking
-    legendary classics with 50,000 votes at 4.8.
-    WR = (v / (v + m)) * R + (m / (v + m)) * C
-    """
-    if votes + min_votes == 0:
-        return rate
-    return (votes / (votes + min_votes)) * rate + (min_votes / (votes + min_votes)) * global_mean
 
 def recommend_popular(
     catalog: List[Dict[str, Any]],
-    min_vote_threshold: int = 250,
+    pool_size: int = 100,
     top_n: int = 10
 ) -> List[Dict[str, Any]]:
     """
-    Popularity-based recommendation filtered by vote count threshold.
+    Popularity-based recommendation: selects the highest average rating
+    from the pool of highest-voted anime across the community.
+    No Bayesian smoothing is used.
     """
-    candidates = [item for item in catalog if item["votes"] >= min_vote_threshold]
-    if not candidates:
-        candidates = catalog
-    
-    # Sort by weighted rating descending
-    sorted_candidates = sorted(
-        candidates,
-        key=lambda x: calculate_bayesian_rating(x["rate"], x["votes"]),
-        reverse=True
-    )
-    return sorted_candidates[:top_n]
+    # 1. Select the pool of highest-voted anime
+    highest_voted = sorted(catalog, key=lambda x: x.get("votes", 0), reverse=True)[:max(pool_size, top_n * 4)]
+    # 2. Sort by highest average rating descending, with total votes as tie-breaker
+    highest_voted.sort(key=lambda x: (x.get("rate", 0.0), x.get("votes", 0)), reverse=True)
+    return highest_voted[:top_n]
 
 # ============================================================
 # CONTENT-BASED SIMILARITY RECOMMENDATION

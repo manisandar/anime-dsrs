@@ -114,6 +114,7 @@ export default function NetflixRow({
                   onRate={onRate}
                   userRating={(sessionRatings.find((r) => r.anime_id === anime.anime_id)?.rating) || 0}
                   showAttribution={false}
+                  showMatchBadge={false}
                 />
               </div>
             ))}

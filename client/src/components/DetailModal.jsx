@@ -109,7 +109,7 @@ export default function DetailModal({ anime, onClose, onSelectSimilar }) {
                 <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#fff' }}>
                   {anime.component_scores.popularity}
                 </div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Bayesian Smoothed</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Consensus Ranking</div>
               </div>
             </div>
           </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import BrowseAndFindPage from './pages/BrowseAndFindPage';
-import SmartMatchPage from './pages/SmartMatchPage';
 import AnimeDetailPage from './pages/AnimeDetailPage';
 import Global3DBackground from './components/Global3DBackground';
 import RatedAnimeModal from './components/RatedAnimeModal';
@@ -122,20 +121,11 @@ export default function App() {
             onNavigate={handleNavigate}
             theme={theme}
           />
-        ) : activeTab === 'browse_find' ? (
-          <BrowseAndFindPage
-            key={browseFindMode}
-            onSelectAnime={(anime) => setSelectedAnime(anime)}
-            sessionRatings={sessionRatings}
-            onRate={handleRate}
-            initialMode={browseFindMode}
-          />
         ) : (
-          <SmartMatchPage
+          <BrowseAndFindPage
             onSelectAnime={(anime) => setSelectedAnime(anime)}
             sessionRatings={sessionRatings}
             onRate={handleRate}
-            onNavigate={handleNavigate}
           />
         )}
 

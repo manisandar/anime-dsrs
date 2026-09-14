@@ -2,17 +2,12 @@
  * Pure Client-Side Academic Recommender Engine for ANIVIBE.
  * CSX/ITX 4207: Decision Support and Recommendation System, Assumption University.
  * 
- * Provides 100% offline, zero-dependency, free static execution of all 4 paradigms:
- * 1. Bayesian Weighted Popularity
+ * Provides 100% offline, zero-dependency, free static execution of all paradigms:
+ * 1. Consensus Popularity (Highest Average Rating from Highest Votes)
  * 2. 29-Genre Cosine Similarity Content-Based Filtering
- *    - Item-to-Item ("More Like This")
- *    - Personalized Session Profile ("Recommended For You")
- * 3. Knowledge-Based Recommendation
- *    - Hard constraints (episodes, rating, genres)
- *    - Domain rules (mood affinity)
- *    - Rule evaluation explanations
- * 4. 1+1 Hybrid Fusion
- *    - 50% CBF User Taste + 50% KBR Situational Fit
+ *    - Item-to-Item ("More Like This" on Anime Detail Page)
+ * 3. 70/40 Hybrid Recommendation
+ *    - 70% Knowledge-Based Constraint Scoring + 40% CBR Multi-Anime Profile Match
  */
 
 const GENRE_LIST = [
@@ -61,13 +56,18 @@ function cosineSimilarity(v1, v2) {
   return dotProduct(v1, v2) / (n1 * n2);
 }
 
-function calculateBayesianRating(rate, votes, globalMean = 3.65, minVotes = 100) {
-  const v = Number(votes) || 0;
-  const r = Number(rate) || 0;
-  const m = minVotes;
-  const c = globalMean;
-  if (v + m === 0) return r;
-  return (v / (v + m)) * r + (m / (v + m)) * c;
+function getGenreVector(anime) {
+  if (anime && Array.isArray(anime.genre_vector) && anime.genre_vector.length > 0) {
+    return anime.genre_vector;
+  }
+  const vec = new Array(GENRE_LIST.length).fill(0);
+  if (anime && Array.isArray(anime.genres)) {
+    const set = new Set(anime.genres.map((g) => String(g).toLowerCase().trim()));
+    GENRE_LIST.forEach((g, idx) => {
+      if (set.has(g.toLowerCase())) vec[idx] = 1;
+    });
+  }
+  return vec;
 }
 
 function getEpisodeCommitment(episodes) {
@@ -166,6 +166,8 @@ export const localEngine = {
     const sorted = [...list];
     if (sort === 'score' || sort === 'rate') {
       sorted.sort((a, b) => (Number(b.rate) || 0) - (Number(a.rate) || 0));
+    } else if (sort === 'episodes') {
+      sorted.sort((a, b) => (Number(a.episodes) || 0) - (Number(b.episodes) || 0));
     } else if (sort === 'title') {
       sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     } else {
@@ -211,50 +213,55 @@ export const localEngine = {
     return { success: true, data: found };
   },
 
-  // 4. Popularity-Based Recommendations (Bayesian Weighted)
-  async getPopularRecommendations({ topK = 18 } = {}) {
+  // 4. Popularity-Based Recommendations: Highest Average Rating from Highest Votes (No Bayesian)
+  async getPopularRecommendations({ topK = 18, poolSize = 100 } = {}) {
     await this.ensureCatalog();
-    const scored = cachedCatalog.map((anime) => {
-      const bayes = calculateBayesianRating(anime.rate, anime.votes);
-      return {
-        ...anime,
-        bayesian_score: Number(bayes.toFixed(3)),
-        match_percentage: Math.min(99, Math.round((bayes / 5.0) * 100))
-      };
+
+    // 1. Select the pool of highest-voted anime across the community
+    const highestVoted = [...cachedCatalog]
+      .sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0))
+      .slice(0, Math.max(poolSize, Number(topK) * 4));
+
+    // 2. From these highest-voted titles, choose the ones with highest average rating (tie-breaking by total votes)
+    highestVoted.sort((a, b) => {
+      const rateDiff = (Number(b.rate) || 0) - (Number(a.rate) || 0);
+      if (Math.abs(rateDiff) > 0.0001) return rateDiff;
+      return (Number(b.votes) || 0) - (Number(a.votes) || 0);
     });
 
-    scored.sort((a, b) => b.bayesian_score - a.bayesian_score);
     return {
       success: true,
-      data: scored.slice(0, Number(topK) || 18)
+      data: highestVoted.slice(0, Number(topK) || 18)
     };
   },
 
   // 5. Content-Based Item Similarity: "More Like This"
-  async getSimilarAnime(id, limit = 8) {
+  // Core Method: CountVectorizer (29 Genres) + Cosine Similarity against Selected Viewing Anime
+  async getSimilarAnime(id, limit = 16) {
     await this.ensureCatalog();
     const target = catalogMap.get(Number(id));
     if (!target) {
       return { success: false, target_id: id, similar: [] };
     }
 
-    const targetVec = target.genre_vector || [];
+    const targetVec = getGenreVector(target);
     const scored = [];
 
     for (const item of cachedCatalog) {
-      if (item.anime_id === target.anime_id) continue;
-      const sim = cosineSimilarity(targetVec, item.genre_vector || []);
+      if (Number(item.anime_id) === Number(target.anime_id)) continue;
+      const sim = cosineSimilarity(targetVec, getGenreVector(item));
       if (sim > 0.0) {
         scored.push({
           ...item,
           similarity: Number(sim.toFixed(3)),
+          similarity_score: Number(sim.toFixed(3)),
           match_percentage: Math.min(99, Math.round(sim * 100))
         });
       }
     }
 
     scored.sort((a, b) => b.similarity - a.similarity);
-    const topSimilar = scored.slice(0, Number(limit) || 8);
+    const topSimilar = scored.slice(0, Number(limit) || 16);
 
     return {
       success: true,
@@ -481,71 +488,119 @@ export const localEngine = {
     };
   },
 
-  // 10. 1+1 Hybrid Recommendation: "Smart Match" (CBF + KBR)
-  async getHybridRecommendations({ sessionRatings = [], constraints = {}, mood = null, topK = 18 } = {}) {
+  // 10. Hybrid Recommendation: Combined 70% KBR + 40% CBR Multi-Anime User Profile
+  // The system uses the content vectors of all selected/rated anime to construct a single user content profile.
+  // The user profile is compared with the genre vector of every anime using Cosine Similarity.
+  async getHybridRecommendations({
+    sessionRatings = [],
+    constraints = {},
+    mood = null,
+    search = '',
+    genre = '',
+    sortBy = 'hybrid',
+    page = 1,
+    limit = 18,
+    topK = 18
+  } = {}) {
     await this.ensureCatalog();
 
-    if (!sessionRatings || sessionRatings.length === 0) {
-      return {
-        success: true,
-        data: {
-          cold_start: true,
-          message: 'You have not rated any anime yet. Rate some anime to personalize Smart Match.',
-          user_taste: null,
-          recommendations: []
-        }
-      };
-    }
-
-    const latestRating = sessionRatings[sessionRatings.length - 1];
-    const refAnime = catalogMap.get(Number(latestRating.anime_id));
-    const refVec = refAnime ? refAnime.genre_vector : null;
+    const dim = 29;
+    const userProfileVector = new Array(dim).fill(0.0);
+    let ratedCount = 0;
     const preferredGenres = {};
-    if (refAnime && refAnime.genres) {
-      for (const g of refAnime.genres) {
-        preferredGenres[g] = 1.0;
+
+    if (sessionRatings && sessionRatings.length > 0) {
+      for (const r of sessionRatings) {
+        const anime = catalogMap.get(Number(r.anime_id));
+        if (anime && anime.genre_vector) {
+          ratedCount++;
+          for (let i = 0; i < dim; i++) {
+            userProfileVector[i] += anime.genre_vector[i] || 0.0;
+          }
+          if (anime.genres) {
+            for (const g of anime.genres) {
+              preferredGenres[g] = (preferredGenres[g] || 0) + 1;
+            }
+          }
+        }
       }
     }
 
+    const hasProfile = ratedCount > 0;
     const candidates = [];
+    const searchLower = search ? search.toLowerCase().trim() : '';
+    const genreLower = genre ? genre.toLowerCase().trim() : '';
 
     for (const anime of cachedCatalog) {
-      // 1. Evaluate Knowledge Rules
+      // Optional text search filter
+      if (searchLower) {
+        const matchTitle = anime.title?.toLowerCase().includes(searchLower);
+        const matchGenre = (anime.genres || []).some((g) => g.toLowerCase().includes(searchLower));
+        if (!matchTitle && !matchGenre) continue;
+      }
+
+      // Optional genre category filter
+      if (genreLower) {
+        const hasG = (anime.genres || []).some((g) => g.toLowerCase() === genreLower);
+        if (!hasG) continue;
+      }
+
+      // 1. Evaluate Knowledge-Based Rules (KBR - 70% Weight)
       const { hardPassed, rules, fitScore } = this.evaluateKbrRules(anime, constraints, mood);
       if (!hardPassed) continue;
 
-      // 2. Evaluate Taste Score using Cosine Similarity to Reference Anime
-      let cbfScore = 0.50;
-      if (refVec) {
-        cbfScore = cosineSimilarity(refVec, anime.genre_vector || []);
+      // 2. Evaluate Content-Based Score using Single User Profile Vector across ALL rated anime (CBR - 40% Weight)
+      let cbfScore = 0.0;
+      if (hasProfile) {
+        cbfScore = cosineSimilarity(userProfileVector, getGenreVector(anime));
       }
 
-      // 3. 1+1 Hybrid Fusion (50% CBF + 50% KBR)
-      const hybridScore = Number((0.50 * cbfScore + 0.50 * fitScore).toFixed(4));
+      // 3. 70/40 Hybrid Fusion Score: 0.70 * KBR + 0.40 * CBR
+      const hybridScore = Number((0.70 * fitScore + 0.40 * cbfScore).toFixed(4));
+      const matchPercentage = Math.min(99, Math.max(15, Math.round((hybridScore / 1.10) * 100)));
 
       candidates.push({
         ...anime,
         hybrid_score: hybridScore,
-        match_percentage: Math.min(99, Math.max(15, Math.round(hybridScore * 100))),
-        cbf_score: Number(cbfScore.toFixed(3)),
+        match_percentage: matchPercentage,
         kbr_score: Number(fitScore.toFixed(3)),
-        cbf_match_pct: Math.min(99, Math.round(cbfScore * 100)),
+        cbf_score: Number(cbfScore.toFixed(3)),
         kbr_match_pct: Math.min(99, Math.round(fitScore * 100)),
+        cbf_match_pct: hasProfile ? Math.min(99, Math.round(cbfScore * 100)) : 0,
         rule_evaluations: rules
       });
     }
 
-    candidates.sort((a, b) => b.hybrid_score - a.hybrid_score);
-    const recs = candidates.slice(0, Number(topK) || 18);
+    // Sorting
+    if (sortBy === 'votes') {
+      candidates.sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
+    } else if (sortBy === 'rate') {
+      candidates.sort((a, b) => (Number(b.rate) || 0) - (Number(a.rate) || 0));
+    } else if (sortBy === 'episodes') {
+      candidates.sort((a, b) => (Number(a.episodes) || 0) - (Number(b.episodes) || 0));
+    } else {
+      // Default: hybrid match score descending
+      candidates.sort((a, b) => b.hybrid_score - a.hybrid_score);
+    }
+
+    const totalMatches = candidates.length;
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.max(1, Number(limit) || Number(topK) || 18);
+    const offset = (pageNum - 1) * limitNum;
+    const paginated = candidates.slice(offset, offset + limitNum);
 
     return {
       success: true,
       data: {
-        cold_start: false,
-        ratings_count: sessionRatings.length,
+        cold_start: !hasProfile,
+        has_user_profile: hasProfile,
+        ratings_count: ratedCount,
         preferred_genres: preferredGenres,
-        total_matches: candidates.length,
-        recommendations: recs
+        total_matches: totalMatches,
+        page: pageNum,
+        totalPages: Math.ceil(totalMatches / limitNum) || 1,
+        recommendations: paginated,
+        results: paginated
       }
     };
   },

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, TrendingUp, Sliders, ArrowRight, Star, Compass, RefreshCw } from 'lucide-react';
+import { Search, Filter, RefreshCw, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import AnimeCard from '../components/AnimeCard';
 import { api } from '../services/api';
+
+const ALL_GENRES = [
+  'action', 'adventure', 'comedy', 'drama', 'fantasy', 'horror',
+  'isekai', 'mecha', 'mystery', 'romance', 'sci-fi', 'shonen',
+  'slice of life', 'sports', 'supernatural', 'thriller'
+];
 
 export default function HomePage({
   onSelectAnime,
@@ -10,16 +16,27 @@ export default function HomePage({
   onNavigate,
   theme
 }) {
+  // Popularity-based default stream
   const [popularAnime, setPopularAnime] = useState([]);
-  const [personalizedAnime, setPersonalizedAnime] = useState([]);
-  const [userProfileMeta, setUserProfileMeta] = useState(null);
   const [loadingPopular, setLoadingPopular] = useState(true);
-  const [loadingPersonalized, setLoadingPersonalized] = useState(false);
 
-  // 1. Load Popular Right Now (Popularity-Based Recommendation)
+  // Search & Filter Box state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [sortBy, setSortBy] = useState('votes');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
+  const isFiltering = Boolean(activeSearch.trim() || selectedGenre);
+
+  // 1. Initial Load: Popular Right Now (Highest Average Rating from Highest Votes)
   useEffect(() => {
     setLoadingPopular(true);
-    api.getPopularRecommendations({ topK: 12 })
+    api.getPopularRecommendations({ topK: 18 })
       .then((res) => {
         if (res.success && res.data) {
           setPopularAnime(res.data);
@@ -29,104 +46,218 @@ export default function HomePage({
       .finally(() => setLoadingPopular(false));
   }, []);
 
-  // 2. Load Personalized Recommendations (Content-Based Filtering) when ratings exist
-  useEffect(() => {
-    if (sessionRatings.length === 0) {
-      setPersonalizedAnime([]);
-      setUserProfileMeta(null);
-      return;
+  // 2. Load Catalog Search / Filter Results
+  const executeSearch = async (targetPage = page) => {
+    setLoadingSearch(true);
+    try {
+      const res = await api.getCatalog({
+        page: targetPage,
+        limit: 18,
+        genre: selectedGenre,
+        search: activeSearch,
+        sort: sortBy,
+      });
+      setSearchResults(res.results || res.data || []);
+      setTotalPages(res.totalPages || 1);
+      setTotalCount(res.total || 0);
+    } catch (err) {
+      console.warn('Catalog search error:', err);
+    } finally {
+      setLoadingSearch(false);
     }
+  };
 
-    setLoadingPersonalized(true);
-    api.getPersonalizedCBF({ sessionRatings, topK: 12 })
-      .then((res) => {
-        if (res.success && res.data) {
-          setPersonalizedAnime(res.data.recommendations || []);
-          setUserProfileMeta(res.data);
-        }
-      })
-      .catch((err) => console.warn('Could not load personalized CBF:', err))
-      .finally(() => setLoadingPersonalized(false));
-  }, [sessionRatings]);
+  useEffect(() => {
+    if (isFiltering) {
+      executeSearch(page);
+    }
+  }, [page, selectedGenre, sortBy, activeSearch]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setPage(1);
+    setActiveSearch(searchQuery);
+  };
+
+  const handleResetSearch = () => {
+    setSearchQuery('');
+    setActiveSearch('');
+    setSelectedGenre('');
+    setSortBy('votes');
+    setPage(1);
+  };
 
   return (
     <div className="home-page-container">
-
-      {/* COLD START ONBOARDING BANNER (0 RATINGS) */}
-      {sessionRatings.length === 0 && (
-        <section className="cold-start-banner glass-panel">
-          <div className="cold-start-info">
-            <div className="cold-start-icon-wrap">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <h3 className="cold-start-title">Select a Reference Anime for Content-Based Filtering</h3>
-              <p className="cold-start-subtitle">
-                Content-Based Filtering uses <strong>CountVectorizer</strong> on anime genres and ranks the catalog using <strong>Cosine Similarity</strong> against your selected reference anime.
-              </p>
-            </div>
+      {/* BROWSE CATALOG SEARCH & FILTER CONTROLS BAR */}
+      <div className="glass-panel" style={{ padding: '16px 20px', marginBottom: '24px' }}>
+        <form onSubmit={handleSearchSubmit} className="catalog-filters-form">
+          {/* Search Input */}
+          <div className="search-input-wrap">
+            <Search size={15} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search catalog by title or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="modern-input"
+              id="input-catalog-search"
+            />
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              className="btn-outline"
-              onClick={() => onRate && onRate(1, 5)}
-              title="Set Naruto Shippuuden as reference anime"
-            >
-              <span>Try Naruto (Action/Fantasy)</span>
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => onNavigate('browse_find')}
-            >
-              <span>Browse Catalog</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-        </section>
-      )}
 
-      {/* SECTION 1: RECOMMENDED FOR YOU (PURE CONTENT-BASED FILTERING) */}
-      {sessionRatings.length > 0 && (
+          {/* Genre Selector */}
+          <div className="filter-select-wrap">
+            <Filter size={14} />
+            <select
+              value={selectedGenre}
+              onChange={(e) => {
+                setSelectedGenre(e.target.value);
+                setPage(1);
+              }}
+              className="modern-select"
+              id="select-catalog-genre"
+            >
+              <option value="">All Genres</option>
+              {ALL_GENRES.map((g) => (
+                <option key={g} value={g}>
+                  {g.charAt(0).toUpperCase() + g.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{ width: 'auto', padding: '10px 20px', fontSize: '13px' }}
+            id="btn-apply-home-search"
+          >
+            Search
+          </button>
+
+          {isFiltering && (
+            <button
+              type="button"
+              className="btn-card-action"
+              onClick={handleResetSearch}
+              style={{ width: 'auto', padding: '10px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              title="Reset search and show popular anime"
+              id="btn-reset-home-search"
+            >
+              <X size={14} />
+              <span>Reset</span>
+            </button>
+          )}
+        </form>
+
+        {isFiltering && (
+          <div className="catalog-stats-row" style={{ marginTop: '12px' }}>
+            <span>{totalCount.toLocaleString()} titles found • Page {page} of {totalPages}</span>
+            {loadingSearch && (
+              <span className="loading-tag">
+                <RefreshCw size={12} className="spin" /> Searching...
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* STREAM SECTION */}
+      {isFiltering ? (
+        /* CATALOG SEARCH RESULTS STREAM */
         <section className="home-stream-section">
           <div className="stream-header-row">
             <div>
-              <div className="stream-category-label">Content-Based Filtering (CountVectorizer + Cosine Similarity)</div>
-              <h2 className="stream-title">Similar to Your Reference Anime</h2>
+              <div className="stream-category-label">Catalog Explorer</div>
+              <h2 className="stream-title">
+                {activeSearch ? `Results for "${activeSearch}"` : selectedGenre ? `${selectedGenre.charAt(0).toUpperCase() + selectedGenre.slice(1)} Anime` : 'Catalog Titles'}
+              </h2>
               <p className="stream-subtitle">
-                {userProfileMeta?.reference_anime ? (
-                  <>
-                    Reference Anime: <strong style={{ color: 'var(--accent-indigo)' }}>{userProfileMeta.reference_anime.title}</strong>
-                    {userProfileMeta.reference_anime.genres && (
-                      <span style={{ marginLeft: '8px', opacity: 0.85 }}>
-                        [{userProfileMeta.reference_anime.genres.join(', ')}]
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  `Ranked by exact 29-genre cosine similarity against your latest selected anime.`
-                )}
+                Filtered from the catalog database.
               </p>
             </div>
-
-            {userProfileMeta?.preferred_genres && (
-              <div className="taste-chips-row">
-                {Object.keys(userProfileMeta.preferred_genres).slice(0, 5).map((genre) => (
-                  <span key={genre} className="taste-chip">
-                    {genre}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          {loadingPersonalized ? (
+          {loadingSearch ? (
             <div className="stream-loading-placeholder">
               <RefreshCw size={18} className="spin" />
-              <span>Computing CountVectorizer & Cosine Similarity rankings...</span>
+              <span>Searching catalog...</span>
+            </div>
+          ) : searchResults.length === 0 ? (
+            <div className="empty-state-panel glass-panel">
+              <h3>No anime found matching your query</h3>
+              <p>Try searching with another keyword or resetting genre filters.</p>
+              <button className="btn-primary" onClick={handleResetSearch} style={{ width: 'auto', marginTop: '12px' }}>
+                Show Popular Anime
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="cards-grid">
+                {searchResults.map((anime) => (
+                  <AnimeCard
+                    key={anime.anime_id}
+                    anime={anime}
+                    onClick={() => onSelectAnime && onSelectAnime(anime)}
+                    onRate={onRate}
+                    userRating={(sessionRatings.find((r) => r.anime_id === anime.anime_id)?.rating) || 0}
+                    showAttribution={false}
+                    showMatchBadge={false}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="pagination-controls" style={{ marginTop: '28px' }}>
+                <button
+                  className="btn-card-action"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  id="btn-home-prev"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Previous</span>
+                </button>
+
+                <span className="page-indicator">
+                  {page} / {totalPages}
+                </span>
+
+                <button
+                  className="btn-card-action"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  id="btn-home-next"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      ) : (
+        /* POPULAR RIGHT NOW (POPULARITY-BASED RECOMMENDATION ONLY) */
+        <section className="home-stream-section">
+          <div className="stream-header-row">
+            <div>
+              <div className="stream-category-label">Popularity-Based Recommendation</div>
+              <h2 className="stream-title">Popular Right Now</h2>
+              <p className="stream-subtitle">
+                Top-rated anime selected from the most-voted titles across the community (highest average rating from highest votes).
+              </p>
+            </div>
+          </div>
+
+          {loadingPopular ? (
+            <div className="stream-loading-placeholder">
+              <RefreshCw size={18} className="spin" />
+              <span>Loading popular titles...</span>
             </div>
           ) : (
             <div className="cards-grid">
-              {personalizedAnime.map((anime) => (
+              {popularAnime.map((anime) => (
                 <AnimeCard
                   key={anime.anime_id}
                   anime={anime}
@@ -134,63 +265,13 @@ export default function HomePage({
                   onRate={onRate}
                   userRating={(sessionRatings.find((r) => r.anime_id === anime.anime_id)?.rating) || 0}
                   showAttribution={false}
+                  showMatchBadge={false}
                 />
               ))}
             </div>
           )}
         </section>
       )}
-
-      {/* SECTION 2: POPULAR RIGHT NOW (POPULARITY-BASED RECOMMENDATION) */}
-      <section className="home-stream-section">
-        <div className="stream-header-row">
-          <div>
-            <div className="stream-category-label">Popularity-Based Recommendation</div>
-            <h2 className="stream-title">Popular Right Now</h2>
-            <p className="stream-subtitle">
-              High-confidence consensus rankings computed using Bayesian rating smoothing.
-            </p>
-          </div>
-        </div>
-
-        {loadingPopular ? (
-          <div className="stream-loading-placeholder">
-            <RefreshCw size={18} className="spin" />
-            <span>Loading popular titles...</span>
-          </div>
-        ) : (
-          <div className="cards-grid">
-            {popularAnime.map((anime) => (
-              <AnimeCard
-                key={anime.anime_id}
-                anime={anime}
-                onClick={() => onSelectAnime && onSelectAnime(anime)}
-                onRate={onRate}
-                userRating={(sessionRatings.find((r) => r.anime_id === anime.anime_id)?.rating) || 0}
-                showAttribution={false}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* SECTION 3: SMART MATCH BANNER */}
-      <section className="smart-match-cta-section glass-panel">
-        <div className="cta-left-pane">
-          <div className="cta-kicker">1+1 Hybrid Recommendation</div>
-          <h2 className="cta-heading">Ready to find your exact match?</h2>
-          <p className="cta-desc">
-            Combine your personal taste profile with situation-specific rules like episode commitments, minimum score thresholds, and viewing mood.
-          </p>
-        </div>
-        <button
-          className="btn-primary cta-btn"
-          onClick={() => onNavigate('smart_match')}
-        >
-          <Sliders size={16} />
-          <span>Launch Smart Match</span>
-        </button>
-      </section>
     </div>
   );
 }

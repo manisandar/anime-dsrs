@@ -11,3 +11,5 @@ client/dist
 .idea/
 *.log
 ~$*
+.anivibe-redesign/
+output/
