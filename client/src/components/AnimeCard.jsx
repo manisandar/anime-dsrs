@@ -50,12 +50,17 @@ export default function AnimeCard({
           </div>
         )}
 
-        {matchPercentage && (
+        {anime.similarity !== undefined ? (
+          <div className="card-match-badge card-similarity-badge" title={`Cosine Similarity: ${anime.similarity}`}>
+            <Sparkles size={11} />
+            <span>Sim: {anime.similarity}</span>
+          </div>
+        ) : matchPercentage ? (
           <div className="card-match-badge" title="Algorithm Match Score">
             <Sparkles size={11} />
             <span>{matchPercentage}% Match</span>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="card-content">

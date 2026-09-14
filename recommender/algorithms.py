@@ -96,60 +96,33 @@ def recommend_content_similar(
     scores.sort(key=lambda x: x[1], reverse=True)
     return scores[:top_n]
 
-def build_user_content_profile(
+def get_reference_content_vector(
     user_ratings: List[Dict[str, Any]],
     catalog_map: Dict[int, Dict[str, Any]]
-) -> Tuple[List[float], Dict[str, float]]:
+) -> Tuple[List[float], Dict[str, float], Optional[Dict[str, Any]]]:
     """
-    Constructs weighted user preference profile vector based on session ratings:
-    Positive ratings (4-5 stars) increase preference (+1, +2).
-    Negative ratings (1-2 stars) decrease preference (-1, -2).
-    Neutral ratings (3 stars) have zero impact (0).
-    
+    Pure Content-Based Reference Item extraction:
+    Uses the user's latest selected or rated anime as the active reference anime.
+    Ratings (1-5 stars) indicate user selection/like and do NOT apply mathematical weighting
+    (Rating - 3.0 is strictly prohibited).
+
     Returns:
-        (profile_vector, top_preferred_genres_dict)
+        (reference_vector, genres_dict, reference_anime)
     """
     dim = 29
-    profile = [0.0] * dim
-    has_ratings = False
+    if not user_ratings:
+        return [0.0] * dim, {}, None
 
-    for r in user_ratings:
-        anime = catalog_map.get(r["anime_id"])
-        if not anime:
-            continue
-        has_ratings = True
-        rating_val = float(r["rating"])
-        weight = rating_val - 3.0  # 5->+2, 4->+1, 3->0, 2->-1, 1->-2
-        
-        for i, val in enumerate(anime["genre_vector"]):
-            profile[i] += val * weight
+    # Use the most recent rated or selected anime as the reference item
+    latest_rating = user_ratings[-1]
+    ref_anime = catalog_map.get(int(latest_rating["anime_id"]))
+    if not ref_anime or "genre_vector" not in ref_anime:
+        return [0.0] * dim, {}, None
 
-    # Clamp negative values to 0 to keep preference representation positive
-    clamped = [max(0.0, x) for x in profile]
-    norm = vector_norm(clamped)
-    if norm > 0.0:
-        normalized_vector = [x / norm for x in clamped]
-    else:
-        normalized_vector = [0.0] * dim
+    ref_vector = ref_anime["genre_vector"]
+    preferred_genres = {g: 1.0 for g in ref_anime.get("genres", [])}
 
-    # Build human-readable genre affinity summary
-    genre_weights = {}
-    if has_ratings and catalog_map:
-        sample_anime = next(iter(catalog_map.values()))
-        # The 29 genre keys from preprocess
-        genre_list = [
-            'action', 'adventure', 'comedy', 'drama', 'fantasy', 'horror',
-            'isekai', 'mecha', 'mystery', 'romance', 'sci-fi', 'shonen',
-            'slice of life', 'sports', 'supernatural', 'thriller', 'historical',
-            'martial arts', 'music', 'psychological', 'post-apocalyptic',
-            'harem', 'idol', 'magical girl', 'seinen', 'shojo', 'tournament',
-            'food', 'super power'
-        ]
-        for idx, g in enumerate(genre_list[:dim]):
-            if clamped[idx] > 0.0:
-                genre_weights[g] = round(clamped[idx], 2)
-
-    return normalized_vector, genre_weights
+    return ref_vector, preferred_genres, ref_anime
 
 # ============================================================
 # KNOWLEDGE-BASED RECOMMENDATION & EXPLAINABILITY

@@ -134,7 +134,7 @@ export const api = {
   },
 
   // 6. Personalized Content-Based Filtering: "Recommended For You"
-  async getPersonalizedCBF({ sessionRatings = [], topK = 12 }) {
+  async getPersonalizedCBF({ sessionRatings = [], referenceId = null, topK = 12 } = {}) {
     return tryRemoteOrLocal(
       async () => {
         const ctrl = new AbortController();
@@ -144,6 +144,7 @@ export const api = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             session_ratings: sessionRatings,
+            reference_id: referenceId,
             top_k: topK,
           }),
           signal: ctrl.signal
@@ -152,7 +153,7 @@ export const api = {
         if (!res.ok) throw new Error('Failed to compute personalized recommendations');
         return res.json();
       },
-      () => localEngine.getPersonalizedCBF({ sessionRatings, topK })
+      () => localEngine.getPersonalizedCBF({ sessionRatings, referenceId, topK })
     );
   },
 

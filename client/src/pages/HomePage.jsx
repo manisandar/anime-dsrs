@@ -57,40 +57,60 @@ export default function HomePage({
         <section className="cold-start-banner glass-panel">
           <div className="cold-start-info">
             <div className="cold-start-icon-wrap">
-              <Star size={20} />
+              <Sparkles size={20} />
             </div>
             <div>
-              <h3 className="cold-start-title">Personalize Your Recommendations</h3>
+              <h3 className="cold-start-title">Select a Reference Anime for Content-Based Filtering</h3>
               <p className="cold-start-subtitle">
-                Rate anime anywhere in the catalog to generate your Content-Based preference profile. Positive ratings boost favored genres; lower ratings filter them out.
+                Content-Based Filtering uses <strong>CountVectorizer</strong> on anime genres and ranks the catalog using <strong>Cosine Similarity</strong> against your selected reference anime.
               </p>
             </div>
           </div>
-          <button
-            className="btn-outline"
-            onClick={() => onNavigate('browse_find')}
-          >
-            <span>Start Rating</span>
-            <ArrowRight size={14} />
-          </button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              className="btn-outline"
+              onClick={() => onRate && onRate(1, 5)}
+              title="Set Naruto Shippuuden as reference anime"
+            >
+              <span>Try Naruto (Action/Fantasy)</span>
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => onNavigate('browse_find')}
+            >
+              <span>Browse Catalog</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
         </section>
       )}
 
-      {/* SECTION 1: RECOMMENDED FOR YOU (PERSONALIZED CONTENT-BASED FILTERING) */}
+      {/* SECTION 1: RECOMMENDED FOR YOU (PURE CONTENT-BASED FILTERING) */}
       {sessionRatings.length > 0 && (
         <section className="home-stream-section">
           <div className="stream-header-row">
             <div>
-              <div className="stream-category-label">Content-Based Filtering</div>
-              <h2 className="stream-title">Recommended For You</h2>
+              <div className="stream-category-label">Content-Based Filtering (CountVectorizer + Cosine Similarity)</div>
+              <h2 className="stream-title">Similar to Your Reference Anime</h2>
               <p className="stream-subtitle">
-                Calculated from your {sessionRatings.length} in-session ratings across 29 genre vectors.
+                {userProfileMeta?.reference_anime ? (
+                  <>
+                    Reference Anime: <strong style={{ color: 'var(--accent-indigo)' }}>{userProfileMeta.reference_anime.title}</strong>
+                    {userProfileMeta.reference_anime.genres && (
+                      <span style={{ marginLeft: '8px', opacity: 0.85 }}>
+                        [{userProfileMeta.reference_anime.genres.join(', ')}]
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  `Ranked by exact 29-genre cosine similarity against your latest selected anime.`
+                )}
               </p>
             </div>
-            
+
             {userProfileMeta?.preferred_genres && (
               <div className="taste-chips-row">
-                {Object.entries(userProfileMeta.preferred_genres).slice(0, 4).map(([genre, wt]) => (
+                {Object.keys(userProfileMeta.preferred_genres).slice(0, 5).map((genre) => (
                   <span key={genre} className="taste-chip">
                     {genre}
                   </span>
@@ -102,7 +122,7 @@ export default function HomePage({
           {loadingPersonalized ? (
             <div className="stream-loading-placeholder">
               <RefreshCw size={18} className="spin" />
-              <span>Updating personalized matches...</span>
+              <span>Computing CountVectorizer & Cosine Similarity rankings...</span>
             </div>
           ) : (
             <div className="cards-grid">

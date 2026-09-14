@@ -166,11 +166,74 @@ def main():
     p.font.color.rgb = ACCENT_CYAN
 
     # ==========================================================================
-    # SLIDE 2: PROBLEM STATEMENT (THE PARADOX OF CHOICE)
+    # SLIDE 2: TITLE 1 — INTRODUCTION
     # ==========================================================================
     s2 = prs.slides.add_slide(blank_layout)
     set_slide_background(s2, prs)
-    add_header(s2, "Problem Statement & Motivation", "The 'Paradox of Choice' in Streaming", "Why viewers struggle to pick an anime, and why typical recommenders fail.")
+    add_header(s2, "Project Overview & Foundations", "Title 1 — Introduction", "ANIVIBE: Decision Support & Pure Content-Based Anime Recommender System")
+
+    col_w = Inches(5.65)
+    card_h = Inches(4.7)
+    top_y = Inches(2.15)
+
+    # Left: Project Motivation & Problem
+    add_card(s2, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_INDIGO)
+    tb = s2.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    tf = tb.text_frame
+    tf.word_wrap = True
+
+    p = tf.paragraphs[0]
+    p.text = "Motivation & Problem Scope"
+    p.font.size = Pt(24)
+    p.font.bold = True
+    p.font.color.rgb = TEXT_WHITE
+    p.space_after = Pt(16)
+
+    intro_bullets_left = [
+        "The Choice Paradox: Streaming catalogs with 1,200+ titles cause decision paralysis; users spend 20–30 minutes browsing without watching.",
+        "Black-Box Mystery: Typical platforms push generic blockbusters without explaining why titles were selected.",
+        "Context Blind Spot: Traditional recommenders overlook current time constraints (episodes) and viewing moods.",
+        "Academic Objective: Build an explainable, responsive recommender grounded in rigorous decision science for Assumption University."
+    ]
+    for b in intro_bullets_left:
+        p = tf.add_paragraph()
+        p.text = f"•  {b}"
+        p.font.size = Pt(18)
+        p.font.color.rgb = TEXT_LIGHT
+        p.space_after = Pt(12)
+
+    # Right: Pure Content-Based Strategy
+    add_card(s2, Inches(6.883), top_y, col_w, card_h, border_color=ACCENT_CYAN)
+    tb = s2.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    tf = tb.text_frame
+    tf.word_wrap = True
+
+    p = tf.paragraphs[0]
+    p.text = "Core Solution Strategy"
+    p.font.size = Pt(24)
+    p.font.bold = True
+    p.font.color.rgb = TEXT_WHITE
+    p.space_after = Pt(16)
+
+    intro_bullets_right = [
+        "Pure Content-Based Filtering: Grounded strictly on CountVectorizer genre representations and Cosine Similarity.",
+        "Reference-Item Architecture: Any selected or rated anime becomes the reference item to discover similar titles.",
+        "No Rating Weighting: Star ratings indicate user selection/like; strictly eliminates arbitrary Rating - 3.0 math.",
+        "Transparent & Explainable: Recommends Top-N similar titles with exact cosine similarity scores and visible genre tags."
+    ]
+    for b in intro_bullets_right:
+        p = tf.add_paragraph()
+        p.text = f"•  {b}"
+        p.font.size = Pt(18)
+        p.font.color.rgb = TEXT_LIGHT
+        p.space_after = Pt(12)
+
+    # ==========================================================================
+    # SLIDE 3: PROBLEM STATEMENT (THE PARADOX OF CHOICE)
+    # ==========================================================================
+    s3 = prs.slides.add_slide(blank_layout)
+    set_slide_background(s3, prs)
+    add_header(s3, "Problem Statement & Motivation", "The 'Paradox of Choice' in Streaming", "Why viewers struggle to pick an anime, and why typical recommenders fail.")
 
     col_w = Inches(5.65)
     card_h = Inches(4.7)
@@ -425,19 +488,45 @@ def main():
         p.space_after = Pt(12)
 
     # ==========================================================================
-    # SLIDE 7: PARADIGM 2 — CBF (ITEM-TO-ITEM SIMILARITY)
+    # SLIDE 8: PARADIGM 2A — CBF (COUNTVECTORIZER & COSINE SIMILARITY)
     # ==========================================================================
-    s7 = prs.slides.add_slide(blank_layout)
-    set_slide_background(s7, prs)
-    add_header(s7, "Recommendation Paradigm 2A", "Content-Based Item Similarity", "Pairing anime using Cosine Similarity on 29-genre binary feature vectors.")
+    s8 = prs.slides.add_slide(blank_layout)
+    set_slide_background(s8, prs)
+    add_header(s8, "Recommendation Paradigm 2A", "Content-Based Filtering Core Method", "CountVectorizer feature matrix + Cosine Similarity on anime genres.")
 
-    add_card(s7, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_PURPLE)
-    tb = s7.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    add_card(s8, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_PURPLE)
+    tb = s8.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
     tf = tb.text_frame
     tf.word_wrap = True
 
     p = tf.paragraphs[0]
-    p.text = "Cosine Similarity Math"
+    p.text = "CountVectorizer Genre Representation"
+    p.font.size = Pt(24)
+    p.font.bold = True
+    p.font.color.rgb = TEXT_WHITE
+    p.space_after = Pt(14)
+
+    cv_bullets = [
+        "Genre Normalization: Clean and normalize genre text across all 1,255 anime (lowercase, whitespace stripping).",
+        "sklearn CountVectorizer: Tokenizes anime genres into an exact 29-genre binary feature matrix.",
+        "Genre Feature Vector: Each anime is represented as a 29-dimensional vector where 1 indicates genre presence and 0 indicates absence.",
+        "Multi-Word Safety: Preserves compound genre tokens (e.g., 'martial arts', 'slice of life', 'sci-fi') accurately."
+    ]
+    for b in cv_bullets:
+        p = tf.add_paragraph()
+        p.text = f"•  {b}"
+        p.font.size = Pt(18)
+        p.font.color.rgb = TEXT_LIGHT
+        p.space_after = Pt(12)
+
+    # Right: Cosine Similarity Formula
+    add_card(s8, Inches(6.883), top_y, col_w, card_h, border_color=ACCENT_CYAN)
+    tb = s8.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    tf = tb.text_frame
+    tf.word_wrap = True
+
+    p = tf.paragraphs[0]
+    p.text = "Cosine Similarity Formulation"
     p.font.size = Pt(24)
     p.font.bold = True
     p.font.color.rgb = TEXT_WHITE
@@ -451,109 +540,78 @@ def main():
     p.space_after = Pt(16)
 
     sim_bullets = [
-        "A and B are 29-dimensional binary vectors where 1 represents genre presence and 0 represents absence.",
-        "A • B computes the count of shared overlapping genres between the two titles.",
-        "||A|| × ||B|| normalizes the score by vector lengths so titles with many genres do not artificially dominate.",
-        "Produces an intuitive similarity percentage from 0% (no overlap) to 100% (identical genre fingerprint)."
+        "Dot Product (A • B): Computes the exact count of shared overlapping genres between two titles.",
+        "Vector Norms (||A|| × ||B||): Normalizes score by vector lengths so titles with many genres do not artificially dominate.",
+        "Standard Library: Implemented via sklearn.metrics.pairwise.cosine_similarity.",
+        "Intuitive Range: Produces a clean similarity score from 0.00 (disjoint) to 1.00 (identical genre profile)."
     ]
-    for b in sim_bullets:
+    for sb in sim_bullets:
         p = tf.add_paragraph()
-        p.text = f"•  {b}"
-        p.font.size = Pt(18)
-        p.font.color.rgb = TEXT_LIGHT
-        p.space_after = Pt(12)
-
-    # Right: "More Like This" UI
-    add_card(s7, Inches(6.883), top_y, col_w, card_h)
-    tb = s7.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
-    tf = tb.text_frame
-    tf.word_wrap = True
-
-    p = tf.paragraphs[0]
-    p.text = "How It Works on Detail Page"
-    p.font.size = Pt(24)
-    p.font.bold = True
-    p.font.color.rgb = TEXT_WHITE
-    p.space_after = Pt(16)
-
-    ui_bullets = [
-        "'More Like This' Row: Displayed on the Anime Detail page directly below the anime information.",
-        "Netflix-Style Carousel: Shows recommendations in a single horizontal row with left/right navigation arrows.",
-        "Concrete Example: If viewing Naruto (Action, Shonen, Martial Arts), it recommends titles with identical high genre overlap.",
-        "Independent of User History: Lets users explore similar shows even before rating any titles."
-    ]
-    for ub in ui_bullets:
-        p = tf.add_paragraph()
-        p.text = f"•  {ub}"
+        p.text = f"•  {sb}"
         p.font.size = Pt(18)
         p.font.color.rgb = TEXT_LIGHT
         p.space_after = Pt(12)
 
     # ==========================================================================
-    # SLIDE 8: PARADIGM 2 — CBF (PERSONALIZED USER PROFILE)
+    # SLIDE 9: PARADIGM 2B — CBF (REFERENCE ITEM MATCHING & WORKED EXAMPLE)
     # ==========================================================================
-    s8 = prs.slides.add_slide(blank_layout)
-    set_slide_background(s8, prs)
-    add_header(s8, "Recommendation Paradigm 2B", "Personalized Content-Based Filtering", "Dynamically learning user taste vectors from active 1-to-5 star ratings.")
+    s9 = prs.slides.add_slide(blank_layout)
+    set_slide_background(s9, prs)
+    add_header(s9, "Recommendation Paradigm 2B", "Reference Anime Matching & Worked Example", "User-selected reference item comparison with concrete mathematical step-by-step example.")
 
-    add_card(s8, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_INDIGO)
-    tb = s8.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    add_card(s9, Inches(0.8), top_y, col_w, card_h, border_color=ACCENT_INDIGO)
+    tb = s9.shapes.add_textbox(Inches(1.1), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
     tf = tb.text_frame
     tf.word_wrap = True
 
     p = tf.paragraphs[0]
-    p.text = "Centered Taste Weighting"
+    p.text = "Reference-Item Matching Architecture"
     p.font.size = Pt(24)
     p.font.bold = True
     p.font.color.rgb = TEXT_WHITE
     p.space_after = Pt(14)
 
-    p = tf.add_paragraph()
-    p.text = "Genre Weight = Rating − 3.0"
-    p.font.size = Pt(20)
-    p.font.bold = True
-    p.font.color.rgb = ACCENT_GREEN
-    p.space_after = Pt(16)
-
-    weight_table = [
-        "5★ Rating = +2.0 (Strongly loved genre; heavy boost)",
-        "4★ Rating = +1.0 (Mild preference; positive boost)",
-        "3★ Rating = 0.0 (Neutral; zero effect on taste profile)",
-        "2★ Rating = −1.0 (Mild dislike; penalizes genre)",
-        "1★ Rating = −2.0 (Strongly avoided; heavy penalty)"
+    flow_bullets = [
+        "Reference Selection: When user selects or rates Anime A (e.g. 5★), Anime A becomes the active reference anime.",
+        "No Rating Weighting: Rating indicates user selection/like; strictly avoids arbitrary Rating - 3.0 math.",
+        "Catalog Comparison: Anime A's genre vector is compared against all catalog titles via Cosine Similarity.",
+        "Self-Exclusion: The reference anime itself is strictly removed from the recommendation candidates.",
+        "Top-N Ranking: Remaining anime are sorted in descending order of similarity score to return Top-N."
     ]
-    for w in weight_table:
+    for fb in flow_bullets:
         p = tf.add_paragraph()
-        p.text = f"•  {w}"
+        p.text = f"•  {fb}"
         p.font.size = Pt(18)
         p.font.color.rgb = TEXT_LIGHT
         p.space_after = Pt(10)
 
-    # Right: Profile Vector Construction
-    add_card(s8, Inches(6.883), top_y, col_w, card_h)
-    tb = s8.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
+    # Right: Concrete Worked Example
+    add_card(s9, Inches(6.883), top_y, col_w, card_h, border_color=ACCENT_GREEN)
+    tb = s9.shapes.add_textbox(Inches(7.183), top_y + Inches(0.35), col_w - Inches(0.6), card_h - Inches(0.7))
     tf = tb.text_frame
     tf.word_wrap = True
 
     p = tf.paragraphs[0]
-    p.text = "User Profile Construction"
+    p.text = "Concrete Worked Example"
     p.font.size = Pt(24)
     p.font.bold = True
     p.font.color.rgb = TEXT_WHITE
-    p.space_after = Pt(16)
+    p.space_after = Pt(12)
 
-    profile_bullets = [
-        "Active Session Learning: Taste vector updates in real time immediately after each star rating is submitted.",
-        "Non-Negative Preference (ReLU): Negative sums are clamped at 0 to maintain a positive genre preference magnitude.",
-        "Candidate Ranking: Every unrated anime is scored against the normalized user vector via Cosine Similarity.",
-        "High Precision: Delivers 0.5500 Precision@10, accurately targeting the viewer's favorite genre clusters."
+    example_steps = [
+        "Anime A = Action, Fantasy  •  Anime B = Action, Adventure",
+        "Anime C = Romance, Drama   •  Anime D = Action, Fantasy, Adv.",
+        "sim(A, B) = 1 / (√2 × √2) = 0.50",
+        "sim(A, C) = 0 / (√2 × √2) = 0.00",
+        "sim(A, D) = 2 / (√2 × √3) = 2 / 2.449 ≈ 0.82",
+        "Ranked Output for User Selecting Anime A:\n  1. Anime D — Sim: 0.82 (Action, Fantasy, Adventure)\n  2. Anime B — Sim: 0.50 (Action, Adventure)"
     ]
-    for pb in profile_bullets:
+    for es in example_steps:
         p = tf.add_paragraph()
-        p.text = f"•  {pb}"
+        p.text = f"•  {es}"
         p.font.size = Pt(18)
         p.font.color.rgb = TEXT_LIGHT
-        p.space_after = Pt(12)
+        p.space_after = Pt(8)
 
     # ==========================================================================
     # SLIDE 9: PARADIGM 3 — KBR (CONSTRAINTS & RULES)

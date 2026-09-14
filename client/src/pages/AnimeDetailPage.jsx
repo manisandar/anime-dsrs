@@ -312,8 +312,8 @@ export default function AnimeDetailPage({
       {/* ============================================================ */}
       <NetflixRow
         title="More Like This"
-        categoryLabel="Content-Based Filtering (Item-to-Item)"
-        subtitle={`Titles sharing closest 29-genre vector similarity with ${anime.title}.`}
+        categoryLabel="Content-Based Filtering (CountVectorizer + Cosine Similarity)"
+        subtitle={`Titles sharing closest genre vector cosine similarity with ${anime.title}.`}
         items={similarAnime}
         loading={loadingSimilar}
         onSelectAnime={onSelectAnime}
@@ -328,8 +328,8 @@ export default function AnimeDetailPage({
       {sessionRatings.length > 0 && (
         <NetflixRow
           title="Recommended For You"
-          categoryLabel="Content-Based Filtering (Personalized Profile)"
-          subtitle={`Based on your overall session taste profile across ${sessionRatings.length} rated anime.`}
+          categoryLabel="Content-Based Filtering (Reference Anime Match)"
+          subtitle={`Top-N recommendations matching your active reference anime.`}
           items={personalizedAnime}
           loading={loadingPersonalized}
           onSelectAnime={onSelectAnime}

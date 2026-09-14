@@ -269,90 +269,80 @@ export const localEngine = {
     };
   },
 
-  // 6. User Profile Vector Construction
-  buildUserProfile(sessionRatings = []) {
-    const dim = 29;
-    const profile = new Array(dim).fill(0.0);
-    let hasRatings = false;
-
-    for (const r of sessionRatings) {
-      const anime = catalogMap.get(Number(r.anime_id));
-      if (!anime || !anime.genre_vector) continue;
-      hasRatings = true;
-      const ratingVal = Number(r.rating) || 3.0;
-      const weight = ratingVal - 3.0; // 5 -> +2, 4 -> +1, 3 -> 0, 2 -> -1, 1 -> -2
-
-      for (let i = 0; i < dim; i++) {
-        profile[i] += (anime.genre_vector[i] || 0.0) * weight;
-      }
-    }
-
-    const clamped = profile.map((x) => Math.max(0.0, x));
-    const norm = vectorNorm(clamped);
-    const normalized = norm > 0.0 ? clamped.map((x) => x / norm) : new Array(dim).fill(0.0);
-
-    const preferredGenres = {};
-    if (hasRatings) {
-      for (let idx = 0; idx < dim; idx++) {
-        if (clamped[idx] > 0.0) {
-          preferredGenres[GENRE_LIST[idx]] = Number(clamped[idx].toFixed(2));
-        }
-      }
-    }
-
-    return { normalized, preferredGenres, hasRatings: norm > 0.0 };
+  // 6. Reference Anime Helper (Pure CBF: Latest user-selected or rated anime)
+  getReferenceAnime(sessionRatings = []) {
+    if (!sessionRatings || sessionRatings.length === 0) return null;
+    const latestRating = sessionRatings[sessionRatings.length - 1];
+    return catalogMap.get(Number(latestRating.anime_id)) || null;
   },
 
   // 7. Personalized Content-Based Filtering: "Recommended For You"
-  async getPersonalizedCBF({ sessionRatings = [], topK = 12 } = {}) {
+  // Core Method: CountVectorizer (29 Genres) + Cosine Similarity + User-Selected/Rated Reference Anime
+  // Ratings are NOT mathematically weighted (Rating - 3.0 is strictly prohibited).
+  async getPersonalizedCBF({ sessionRatings = [], referenceId = null, topK = 12 } = {}) {
     await this.ensureCatalog();
-    if (!sessionRatings || sessionRatings.length === 0) {
+    
+    let refAnime = null;
+    if (referenceId) {
+      refAnime = catalogMap.get(Number(referenceId));
+    } else if (sessionRatings && sessionRatings.length > 0) {
+      const latest = sessionRatings[sessionRatings.length - 1];
+      refAnime = catalogMap.get(Number(latest.anime_id));
+    }
+
+    if (!refAnime) {
       return {
         success: true,
         data: {
           has_profile: false,
-          message: 'No session ratings provided yet.',
+          message: 'No reference anime selected or rated yet. Rate or select an anime to generate Content-Based recommendations.',
+          reference_anime: null,
           preferred_genres: {},
           recommendations: []
         }
       };
     }
 
-    const { normalized, preferredGenres, hasRatings } = this.buildUserProfile(sessionRatings);
-    if (!hasRatings) {
-      return {
-        success: true,
-        data: {
-          has_profile: false,
-          message: 'Ratings were neutral or canceled out.',
-          preferred_genres: {},
-          recommendations: []
-        }
-      };
-    }
-
-    const ratedIds = new Set(sessionRatings.map((r) => Number(r.anime_id)));
+    const targetVec = refAnime.genre_vector || [];
     const scored = [];
+    const ratedIds = new Set(sessionRatings.map((r) => Number(r.anime_id)));
 
     for (const anime of cachedCatalog) {
+      // Exclude reference anime itself
+      if (Number(anime.anime_id) === Number(refAnime.anime_id)) continue;
+      // Skip anime already in rated list if desired
       if (ratedIds.has(Number(anime.anime_id))) continue;
-      const sim = cosineSimilarity(normalized, anime.genre_vector || []);
+
+      const sim = cosineSimilarity(targetVec, anime.genre_vector || []);
       if (sim > 0.0) {
         scored.push({
           ...anime,
-          cbf_score: Number(sim.toFixed(4)),
+          similarity: Number(sim.toFixed(3)),
+          cbf_score: Number(sim.toFixed(3)),
           match_percentage: Math.min(99, Math.max(10, Math.round(sim * 100)))
         });
       }
     }
 
-    scored.sort((a, b) => b.cbf_score - a.cbf_score);
+    scored.sort((a, b) => b.similarity - a.similarity);
     const recs = scored.slice(0, Number(topK) || 12);
+
+    const preferredGenres = {};
+    for (const g of (refAnime.genres || [])) {
+      preferredGenres[g] = 1.0;
+    }
 
     return {
       success: true,
       data: {
         has_profile: true,
+        reference_anime: {
+          anime_id: refAnime.anime_id,
+          title: refAnime.title,
+          genres: refAnime.genres || [],
+          rate: refAnime.rate || 0,
+          anime_img: refAnime.anime_img || ''
+        },
         ratings_count: sessionRatings.length,
         preferred_genres: preferredGenres,
         recommendations: recs
@@ -507,7 +497,16 @@ export const localEngine = {
       };
     }
 
-    const { normalized, preferredGenres, hasRatings } = this.buildUserProfile(sessionRatings);
+    const latestRating = sessionRatings[sessionRatings.length - 1];
+    const refAnime = catalogMap.get(Number(latestRating.anime_id));
+    const refVec = refAnime ? refAnime.genre_vector : null;
+    const preferredGenres = {};
+    if (refAnime && refAnime.genres) {
+      for (const g of refAnime.genres) {
+        preferredGenres[g] = 1.0;
+      }
+    }
+
     const candidates = [];
 
     for (const anime of cachedCatalog) {
@@ -515,10 +514,10 @@ export const localEngine = {
       const { hardPassed, rules, fitScore } = this.evaluateKbrRules(anime, constraints, mood);
       if (!hardPassed) continue;
 
-      // 2. Evaluate Taste Score
+      // 2. Evaluate Taste Score using Cosine Similarity to Reference Anime
       let cbfScore = 0.50;
-      if (hasRatings) {
-        cbfScore = cosineSimilarity(normalized, anime.genre_vector || []);
+      if (refVec) {
+        cbfScore = cosineSimilarity(refVec, anime.genre_vector || []);
       }
 
       // 3. 1+1 Hybrid Fusion (50% CBF + 50% KBR)
